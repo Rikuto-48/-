@@ -39,6 +39,14 @@ function Paragraphs({ lines, className }: { lines: string[]; className: string }
   )
 }
 
+function PhotoBreak({ src, alt, tilt }: { src: string; alt: string; tilt: 'left' | 'right' }) {
+  return (
+    <section className="lp-photo-break">
+      <img src={src} alt={alt} className={`lp-photo-break-img lp-photo-break-${tilt}`} loading="lazy" />
+    </section>
+  )
+}
+
 function LandingPage() {
   return (
     <main className="lp">
@@ -55,18 +63,7 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* トレーニング風景ギャラリー */}
-      <section className="lp-gallery">
-        {TRAINING_PHOTOS.map((photo, index) => (
-          <img
-            key={photo}
-            src={photo}
-            alt={TRAINING_PHOTO_ALTS[index]}
-            className="lp-gallery-photo"
-            loading="lazy"
-          />
-        ))}
-      </section>
+      <PhotoBreak src={TRAINING_PHOTOS[0]} alt={TRAINING_PHOTO_ALTS[0]} tilt="left" />
 
       {/* こんな方へ */}
       <section className="lp-section">
@@ -93,6 +90,8 @@ function LandingPage() {
           ))}
         </div>
       </section>
+
+      <PhotoBreak src={TRAINING_PHOTOS[1]} alt={TRAINING_PHOTO_ALTS[1]} tilt="right" />
 
       {/* 得られるベネフィット */}
       <section className="lp-section">
@@ -123,6 +122,8 @@ function LandingPage() {
           ))}
         </div>
       </section>
+
+      <PhotoBreak src={TRAINING_PHOTOS[2]} alt={TRAINING_PHOTO_ALTS[2]} tilt="left" />
 
       {/* お客様の声 */}
       <section className="lp-section">
