@@ -1,3 +1,0 @@
-export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxx
-git remote set-url origin https://<トークン>@github.com/ユーザー名/リポジトリ名.git
-gh auth login
