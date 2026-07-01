@@ -1,4 +1,8 @@
 import type { ReactNode } from 'react'
+import profilePhoto from '../assets/profile/profile-photo.jpg'
+import trainingPhoto1 from '../assets/profile/training-1.jpg'
+import trainingPhoto2 from '../assets/profile/training-2.jpg'
+import trainingPhoto3 from '../assets/profile/training-3.jpg'
 import {
   BENEFITS,
   CONCEPT,
@@ -8,15 +12,30 @@ import {
   ROADMAP,
   SUPPORT_FEATURES,
   TESTIMONIALS,
+  TRAINING_PHOTO_ALTS,
 } from '../data/landingContent'
 
 const LINE_URL = import.meta.env.VITE_LINE_URL || 'https://line.me/'
+
+const TRAINING_PHOTOS = [trainingPhoto1, trainingPhoto2, trainingPhoto3]
 
 function LineButton({ children }: { children: ReactNode }) {
   return (
     <a className="lp-line-button" href={LINE_URL} target="_blank" rel="noopener noreferrer">
       {children}
     </a>
+  )
+}
+
+function Paragraphs({ lines, className }: { lines: string[]; className: string }) {
+  return (
+    <>
+      {lines.map((line) => (
+        <p key={line} className={className}>
+          {line}
+        </p>
+      ))}
+    </>
   )
 }
 
@@ -27,20 +46,26 @@ function LandingPage() {
       <section className="lp-hero">
         <p className="lp-hero-eyebrow">パーソナルトレーニング「イクマ」</p>
         <h1 className="lp-hero-title">{CONCEPT.catchCopy}</h1>
-        <p className="lp-hero-lead">
-          {CONCEPT.lead.split('\n').map((line) => (
-            <span key={line}>
-              {line}
-              <br />
-            </span>
-          ))}
-        </p>
+        <Paragraphs lines={CONCEPT.lead} className="lp-hero-lead" />
         <div className="lp-hero-actions">
           <a className="lp-primary-button" href="/diagnosis">
             30秒で自分のタイプを診断する
           </a>
           <LineButton>LINEで無料相談する</LineButton>
         </div>
+      </section>
+
+      {/* トレーニング風景ギャラリー */}
+      <section className="lp-gallery">
+        {TRAINING_PHOTOS.map((photo, index) => (
+          <img
+            key={photo}
+            src={photo}
+            alt={TRAINING_PHOTO_ALTS[index]}
+            className="lp-gallery-photo"
+            loading="lazy"
+          />
+        ))}
       </section>
 
       {/* こんな方へ */}
@@ -106,7 +131,7 @@ function LandingPage() {
           {TESTIMONIALS.map((testimonial) => (
             <div key={testimonial.title} className="lp-testimonial-card">
               <p className="lp-testimonial-title">{testimonial.title}</p>
-              <p className="lp-testimonial-body">{testimonial.body}</p>
+              <Paragraphs lines={testimonial.body} className="lp-testimonial-paragraph" />
             </div>
           ))}
         </div>
@@ -118,7 +143,11 @@ function LandingPage() {
         <div className="lp-price-card">
           <p className="lp-price-duration">{PRICING.duration}フルサポートプログラム</p>
           <p className="lp-price-amount">¥{PRICING.price}</p>
-          <p className="lp-price-note">月2回Zoom（計12回）+ LINE随時サポート + オーダーメイドメニュー + 食事管理 + マインドセットコーチング</p>
+          <p className="lp-price-note">
+            月2回Zoom（計12回）+ LINE随時サポート
+            <br />
+            + オーダーメイドメニュー + 食事管理 + マインドセットコーチング
+          </p>
         </div>
         <div className="lp-comparison-table">
           {PRICING.comparisons.map((row) => (
@@ -138,8 +167,10 @@ function LandingPage() {
       <section className="lp-section">
         <h2 className="lp-section-title">運営者プロフィール</h2>
         <div className="lp-profile-card">
+          <img src={profilePhoto} alt={PROFILE.name} className="lp-profile-photo" loading="lazy" />
           <p className="lp-profile-name">{PROFILE.name}</p>
-          <p className="lp-profile-bio">{PROFILE.bio}</p>
+          <p className="lp-profile-role">{PROFILE.role}</p>
+          <Paragraphs lines={PROFILE.bio} className="lp-profile-bio" />
         </div>
       </section>
 
