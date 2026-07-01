@@ -257,6 +257,13 @@ p {
   margin-bottom: 20px;
 }
 
+.admin-subtitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 24px 0 12px;
+}
+
 .admin-form {
   display: flex;
   flex-direction: column;

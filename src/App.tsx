@@ -8,6 +8,7 @@ import LeadsPage from './pages/admin/LeadsPage'
 import CalendarPage from './pages/admin/CalendarPage'
 import AnalyticsPage from './pages/admin/AnalyticsPage'
 import MessageQueuePage from './pages/admin/MessageQueuePage'
+import InstagramSyncPage from './pages/admin/InstagramSyncPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
           <Route path="/admin/calendar" element={<CalendarPage />} />
           <Route path="/admin/analytics" element={<AnalyticsPage />} />
           <Route path="/admin/messages" element={<MessageQueuePage />} />
+          <Route path="/admin/instagram" element={<InstagramSyncPage />} />
         </Route>
       </Route>
     </Routes>
