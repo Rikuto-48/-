@@ -165,6 +165,28 @@ p {
   margin-bottom: 16px;
 }
 
+.share-button {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent-dark);
+  background: #fff;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.share-message {
+  text-align: center;
+  font-size: 13px;
+  color: var(--accent-dark);
+  margin-bottom: 16px;
+}
+
 .retry-link {
   display: block;
   text-align: center;
@@ -233,6 +255,13 @@ p {
   font-weight: 700;
   color: var(--text-h);
   margin-bottom: 20px;
+}
+
+.admin-subtitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 24px 0 12px;
 }
 
 .admin-form {
@@ -341,6 +370,77 @@ p {
   color: #fff;
   background: var(--accent);
   border-color: var(--accent);
+}
+
+.metrics-inputs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.metric-input {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.metric-input input {
+  width: 56px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.analytics-note {
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.message-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.message-queue-item {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.message-queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.message-queue-name {
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.message-queue-situation {
+  font-size: 12px;
+  color: var(--accent-dark);
+  background: rgba(108, 75, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.message-queue-text {
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  margin-bottom: 12px;
 }
 
 /* ランディングページ(イクマの世界観: ダーク×ゴールド) */
