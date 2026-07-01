@@ -1,0 +1,174 @@
+:root {
+  --text: #4b4550;
+  --text-h: #1b1725;
+  --bg: #faf9fc;
+  --border: #e5e4e7;
+  --accent: #6c4bff;
+  --accent-dark: #5636e6;
+  --line-green: #06c755;
+  --shadow: rgba(0, 0, 0, 0.08) 0 4px 12px;
+
+  --sans: system-ui, 'Hiragino Sans', 'Yu Gothic', 'Segoe UI', Roboto,
+    sans-serif;
+
+  font: 16px/1.7 var(--sans);
+  color-scheme: light;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+p {
+  margin: 0;
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px 40px;
+}
+
+.container {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* 進捗バー */
+.progress {
+  margin-bottom: 28px;
+}
+
+.progress-label {
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* 質問 */
+.question-text {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-h);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.choice-button {
+  width: 100%;
+  padding: 16px 18px;
+  font-size: 16px;
+  text-align: left;
+  color: var(--text-h);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.choice-button:hover,
+.choice-button:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.choice-button:active {
+  transform: scale(0.98);
+}
+
+/* 結果ページ */
+.result-eyebrow {
+  font-size: 14px;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.result-name {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--text-h);
+  margin-bottom: 8px;
+}
+
+.result-catch {
+  font-size: 17px;
+  color: var(--accent-dark);
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.result-description {
+  font-size: 15px;
+  line-height: 1.8;
+  margin-bottom: 32px;
+}
+
+.line-cta {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--line-green);
+  border-radius: 12px;
+  text-decoration: none;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+
+.retry-link {
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text);
+  text-decoration: underline;
+}
