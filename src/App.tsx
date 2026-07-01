@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import LandingPage from './pages/LandingPage'
 import DiagnosisPage from './pages/DiagnosisPage'
 import ResultPage from './pages/ResultPage'
 import LoginPage from './pages/admin/LoginPage'
@@ -10,8 +11,9 @@ import ProtectedRoute from './components/ProtectedRoute'
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<DiagnosisPage />} />
-      <Route path="/result" element={<ResultPage />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/diagnosis" element={<DiagnosisPage />} />
+      <Route path="/diagnosis/result" element={<ResultPage />} />
 
       <Route path="/admin/login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>

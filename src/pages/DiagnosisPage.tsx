@@ -33,7 +33,7 @@ function DiagnosisPage() {
       resultType,
     )
 
-    navigate('/result', { state: { resultType } })
+    navigate('/diagnosis/result', { state: { resultType } })
   }
 
   return (

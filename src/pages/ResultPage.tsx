@@ -13,7 +13,7 @@ function ResultPage() {
   const state = location.state as ResultLocationState | null
 
   if (!state?.resultType) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/diagnosis" replace />
   }
 
   const type = DIAGNOSIS_TYPES[state.resultType]
@@ -35,8 +35,12 @@ function ResultPage() {
           LINEで結果の詳細を受け取る
         </a>
 
-        <a className="retry-link" href="/">
+        <a className="retry-link" href="/diagnosis">
           もう一度診断する
+        </a>
+
+        <a className="back-to-lp-link" href="/">
+          トップページに戻る
         </a>
       </div>
     </main>
