@@ -16,6 +16,12 @@ function AdminLayout() {
           <NavLink to="/admin/calendar" className={({ isActive }) => (isActive ? 'active' : '')}>
             コンテンツカレンダー
           </NavLink>
+          <NavLink to="/admin/analytics" className={({ isActive }) => (isActive ? 'active' : '')}>
+            実績ダッシュボード
+          </NavLink>
+          <NavLink to="/admin/messages" className={({ isActive }) => (isActive ? 'active' : '')}>
+            今日のLINE配信
+          </NavLink>
         </nav>
         <button type="button" className="logout-button" onClick={handleLogout}>
           ログアウト

@@ -6,6 +6,8 @@ import LoginPage from './pages/admin/LoginPage'
 import AdminLayout from './pages/admin/AdminLayout'
 import LeadsPage from './pages/admin/LeadsPage'
 import CalendarPage from './pages/admin/CalendarPage'
+import AnalyticsPage from './pages/admin/AnalyticsPage'
+import MessageQueuePage from './pages/admin/MessageQueuePage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -21,6 +23,8 @@ function App() {
           <Route path="/admin" element={<Navigate to="/admin/leads" replace />} />
           <Route path="/admin/leads" element={<LeadsPage />} />
           <Route path="/admin/calendar" element={<CalendarPage />} />
+          <Route path="/admin/analytics" element={<AnalyticsPage />} />
+          <Route path="/admin/messages" element={<MessageQueuePage />} />
         </Route>
       </Route>
     </Routes>
