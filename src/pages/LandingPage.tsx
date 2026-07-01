@@ -32,7 +32,12 @@ function Paragraphs({ lines, className }: { lines: string[]; className: string }
     <>
       {lines.map((line) => (
         <p key={line} className={className}>
-          {line}
+          {line.split('\n').map((part, i, parts) => (
+            <span key={part}>
+              {part}
+              {i < parts.length - 1 && <br />}
+            </span>
+          ))}
         </p>
       ))}
     </>

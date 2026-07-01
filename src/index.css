@@ -382,16 +382,17 @@ p {
 }
 
 .lp-hero-title {
-  font-size: 34px;
+  font-size: clamp(19px, 6.9vw, 34px);
   font-weight: 800;
   color: var(--lp-text-h);
   line-height: 1.4;
   margin-bottom: 18px;
   letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .lp-hero-lead {
-  font-size: 15px;
+  font-size: clamp(10.5px, 3.25vw, 16px);
   line-height: 1.8;
   color: var(--lp-text-muted);
   max-width: 480px;
