@@ -295,13 +295,25 @@ p {
 }
 
 .admin-form input,
-.admin-form select {
+.admin-form select,
+.admin-form textarea {
   padding: 10px 12px;
   font-size: 15px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #fff;
   color: var(--text-h);
+}
+
+.admin-form textarea {
+  font-family: inherit;
+  resize: vertical;
+}
+
+.x-post-body {
+  white-space: pre-wrap;
+  max-width: 320px;
+  word-break: break-word;
 }
 
 .form-error {
