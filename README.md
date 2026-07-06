@@ -48,6 +48,7 @@ npm run dev
 | `0003_create_content_calendar.sql` | コンテンツカレンダーテーブル（認証ユーザーのみ読み書き可） |
 | `0004_add_content_metrics.sql` | コンテンツカレンダーに `content_pillar`（企画の型）と投稿後の実績数値（`impressions` / `saves` / `profile_visits` / `dm_count`）を追加 |
 | `0005_add_instagram_metrics.sql` | Instagram同期用テーブル `instagram_account_metrics`（アカウント日次実績）・`instagram_media_insights`（投稿ごとの実績）を追加 |
+| `0006_add_diagnosis_source.sql` | 診断結果に流入元 `source` を追加（診断ページURLの `?src=x` 等を保存。X経由の診断数を計測） |
 
 ### 管理画面ユーザーの作成
 

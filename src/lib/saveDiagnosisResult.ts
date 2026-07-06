@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient'
+import { getTrafficSource } from './trafficSource'
 import type { DiagnosisTypeKey } from '../data/diagnosisTypes'
 
 export interface DiagnosisAnswerRecord {
@@ -19,6 +20,7 @@ export async function saveDiagnosisResult(
   const { error } = await supabase.from('diagnosis_results').insert({
     answers,
     result_type: resultType,
+    source: getTrafficSource(),
   })
 
   if (error) {
