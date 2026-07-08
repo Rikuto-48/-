@@ -29,10 +29,16 @@ interface MediaItem {
   timestamp?: string
 }
 
+// 管理画面(ブラウザ)からの呼び出しを許可するCORSヘッダー
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
 }
 
@@ -147,6 +153,11 @@ async function syncMediaInsights(
 }
 
 Deno.serve(async (req) => {
+  // ブラウザが本リクエストの前に送ってくる確認(preflight)への応答
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   try {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
