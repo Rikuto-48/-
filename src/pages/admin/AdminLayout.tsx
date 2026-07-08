@@ -25,6 +25,9 @@ function AdminLayout() {
           <NavLink to="/admin/instagram" className={({ isActive }) => (isActive ? 'active' : '')}>
             Instagramデータ管理
           </NavLink>
+          <NavLink to="/admin/x-posts" className={({ isActive }) => (isActive ? 'active' : '')}>
+            X投稿予約
+          </NavLink>
         </nav>
         <button type="button" className="logout-button" onClick={handleLogout}>
           ログアウト

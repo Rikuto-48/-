@@ -9,6 +9,7 @@ import CalendarPage from './pages/admin/CalendarPage'
 import AnalyticsPage from './pages/admin/AnalyticsPage'
 import MessageQueuePage from './pages/admin/MessageQueuePage'
 import InstagramSyncPage from './pages/admin/InstagramSyncPage'
+import XPostsPage from './pages/admin/XPostsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
           <Route path="/admin/analytics" element={<AnalyticsPage />} />
           <Route path="/admin/messages" element={<MessageQueuePage />} />
           <Route path="/admin/instagram" element={<InstagramSyncPage />} />
+          <Route path="/admin/x-posts" element={<XPostsPage />} />
         </Route>
       </Route>
     </Routes>
