@@ -53,6 +53,7 @@ npm run dev
 | `0006_add_diagnosis_source.sql` | 診断結果に流入元 `source` を追加（診断ページURLの `?src=x` 等を保存。X経由の診断数を計測） |
 | `0007_create_x_posts.sql` | X予約投稿テーブル `x_posts` を追加（本文・予約日時・投稿ステータスを管理） |
 | `0008_create_meal_logs.sql` | 食事管理ログテーブル `meal_logs` を追加（`name`+`log_date`がユニーク。anonはinsert/update可、authenticatedはselect可） |
+| `0009_meal_log_upsert_function.sql` | `meal_logs`への書き込みをSECURITY DEFINER関数`upsert_meal_log`経由にする。anonにSELECTを与えずに「名前+日付が同じなら上書き」を実現する(ON CONFLICT DO UPDATEは競合先の既存行をSELECTできる必要があり、素のupsertだとRLSに弾かれるため) |
 
 ### 管理画面ユーザーの作成
 

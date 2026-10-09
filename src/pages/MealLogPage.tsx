@@ -34,19 +34,16 @@ function MealLogPage() {
     setSubmitting(true)
     setError(null)
 
-    const { error: upsertError } = await supabase.from('meal_logs').upsert(
-      {
-        name,
-        log_date: logDate,
-        breakfast: breakfast || null,
-        lunch: lunch || null,
-        dinner: dinner || null,
-        snack: snack || null,
-        weight: weight ? Number(weight) : null,
-        memo: memo || null,
-      },
-      { onConflict: 'name,log_date' },
-    )
+    const { error: upsertError } = await supabase.rpc('upsert_meal_log', {
+      p_name: name,
+      p_log_date: logDate,
+      p_breakfast: breakfast || null,
+      p_lunch: lunch || null,
+      p_dinner: dinner || null,
+      p_snack: snack || null,
+      p_weight: weight ? Number(weight) : null,
+      p_memo: memo || null,
+    })
 
     setSubmitting(false)
 
