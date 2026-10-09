@@ -39,7 +39,7 @@ function LoginPage() {
   }
 
   return (
-    <main className="page">
+    <main className="page theme-gold">
       <div className="container">
         <h1 className="admin-title">管理画面ログイン</h1>
         <form className="admin-form" onSubmit={handleSubmit}>

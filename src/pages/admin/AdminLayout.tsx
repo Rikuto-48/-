@@ -7,7 +7,7 @@ function AdminLayout() {
   }
 
   return (
-    <div className="admin-shell">
+    <div className="admin-shell theme-gold">
       <header className="admin-header">
         <nav className="admin-nav">
           <NavLink to="/admin/leads" className={({ isActive }) => (isActive ? 'active' : '')}>
