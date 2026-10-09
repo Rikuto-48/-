@@ -1096,11 +1096,81 @@ button.meal-back-link {
   text-align: left;
 }
 
-.meal-history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.meal-calendar {
   margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--lp-card);
+  border: 1px solid var(--lp-border);
+  border-radius: 8px;
+}
+
+.meal-calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.meal-calendar-nav-button {
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  color: var(--lp-gold);
+  background: none;
+  border: 1px solid var(--lp-border);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.meal-calendar-month-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--lp-text-h);
+  margin: 0;
+}
+
+.meal-calendar-weekdays,
+.meal-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.meal-calendar-weekdays {
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: var(--lp-text-muted);
+  text-align: center;
+}
+
+.meal-calendar-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--lp-text-muted);
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: default;
+}
+
+.meal-calendar-cell-empty {
+  visibility: hidden;
+}
+
+.meal-calendar-cell-has-log {
+  color: #1a1305;
+  background: var(--lp-gold-bright);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.meal-calendar-cell-selected {
+  outline: 2px solid var(--lp-gold-dark);
+  outline-offset: 1px;
 }
 
 .meal-history-card {

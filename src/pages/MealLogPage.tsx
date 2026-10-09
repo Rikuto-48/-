@@ -57,6 +57,80 @@ function getMealField(log: MealHistoryLog, key: MealType): { text: string | null
   }
 }
 
+const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土']
+
+function formatMonthLabel(date: Date) {
+  return `${date.getFullYear()}年${date.getMonth() + 1}月`
+}
+
+function toDateKey(year: number, month: number, day: number) {
+  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+function buildCalendarCells(monthDate: Date): (string | null)[] {
+  const year = monthDate.getFullYear()
+  const month = monthDate.getMonth()
+  const firstWeekday = new Date(year, month, 1).getDay()
+  const totalDays = new Date(year, month + 1, 0).getDate()
+
+  const cells: (string | null)[] = []
+  for (let i = 0; i < firstWeekday; i++) cells.push(null)
+  for (let day = 1; day <= totalDays; day++) cells.push(toDateKey(year, month, day))
+  return cells
+}
+
+function MealDayDetailCard({
+  log,
+  replyDraft,
+  onReplyChange,
+  onReplySave,
+  saving,
+}: {
+  log: MealHistoryLog
+  replyDraft: string
+  onReplyChange: (value: string) => void
+  onReplySave: () => void
+  saving: boolean
+}) {
+  return (
+    <div className="meal-history-card">
+      <p className="meal-history-date">{log.log_date}</p>
+
+      {MEAL_TYPES.map(({ key, label }) => {
+        const { text, photoUrl } = getMealField(log, key)
+        if (!text && !photoUrl) return null
+        return (
+          <div key={key} className="meal-history-meal">
+            <p className="meal-history-meal-label">{label}</p>
+            {text && <p className="meal-history-meal-text">{text}</p>}
+            {photoUrl && (
+              <img src={photoUrl} alt={`${log.log_date}の${label}の写真`} className="meal-history-photo" />
+            )}
+          </div>
+        )
+      })}
+
+      {log.weight !== null && <p className="meal-history-weight">体重: {log.weight}kg</p>}
+      {log.memo && <p className="meal-history-memo">メモ: {log.memo}</p>}
+
+      {log.coach_comment && (
+        <div className="meal-coach-comment">
+          <p className="meal-coach-comment-label">イクマから</p>
+          <p className="meal-coach-comment-text">{log.coach_comment}</p>
+        </div>
+      )}
+
+      <label className="meal-field meal-reply-field">
+        イクマへの一言・任意
+        <textarea value={replyDraft} onChange={(e) => onReplyChange(e.target.value)} rows={2} />
+      </label>
+      <button type="button" className="meal-reply-save" onClick={onReplySave} disabled={saving}>
+        {saving ? '送信中...' : '返信を送る'}
+      </button>
+    </div>
+  )
+}
+
 function todayLocalDate(): string {
   const now = new Date()
   const offsetMs = now.getTimezoneOffset() * 60000
@@ -83,6 +157,8 @@ function MealLogPage() {
   const [historyError, setHistoryError] = useState<string | null>(null)
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({})
   const [replySaving, setReplySaving] = useState<Record<string, boolean>>({})
+  const [calendarMonth, setCalendarMonth] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   function updateMealText(type: MealType, value: string) {
     setMealTexts((prev) => ({ ...prev, [type]: value }))
@@ -218,7 +294,25 @@ function MealLogPage() {
       return
     }
 
-    setHistoryLogs((data as MealHistoryLog[]) ?? [])
+    const logs = (data as MealHistoryLog[]) ?? []
+    setHistoryLogs(logs)
+
+    if (logs.length > 0) {
+      const [year, month] = logs[0].log_date.split('-').map(Number)
+      setCalendarMonth(new Date(year, month - 1, 1))
+      setSelectedDate(logs[0].log_date)
+    } else {
+      setCalendarMonth(new Date())
+      setSelectedDate(null)
+    }
+  }
+
+  function goToPrevMonth() {
+    setCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
+  }
+
+  function goToNextMonth() {
+    setCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
   }
 
   async function handleReplySave(targetLogDate: string) {
@@ -246,6 +340,9 @@ function MealLogPage() {
   }
 
   if (viewMode === 'history') {
+    const logsByDate = new Map(historyLogs.map((log) => [log.log_date, log]))
+    const selectedLog = selectedDate ? (logsByDate.get(selectedDate) ?? null) : null
+
     return (
       <main className="lp meal-page">
         <div className="meal-container">
@@ -261,60 +358,61 @@ function MealLogPage() {
             <p className="meal-lead">まだ記録がありません。</p>
           )}
 
-          <div className="meal-history-list">
-            {historyLogs.map((log) => (
-              <div key={log.log_date} className="meal-history-card">
-                <p className="meal-history-date">{log.log_date}</p>
-
-                {MEAL_TYPES.map(({ key, label }) => {
-                  const { text, photoUrl } = getMealField(log, key)
-                  if (!text && !photoUrl) return null
-                  return (
-                    <div key={key} className="meal-history-meal">
-                      <p className="meal-history-meal-label">{label}</p>
-                      {text && <p className="meal-history-meal-text">{text}</p>}
-                      {photoUrl && (
-                        <img
-                          src={photoUrl}
-                          alt={`${log.log_date}の${label}の写真`}
-                          className="meal-history-photo"
-                        />
-                      )}
-                    </div>
-                  )
-                })}
-
-                {log.weight !== null && <p className="meal-history-weight">体重: {log.weight}kg</p>}
-                {log.memo && <p className="meal-history-memo">メモ: {log.memo}</p>}
-
-                {log.coach_comment && (
-                  <div className="meal-coach-comment">
-                    <p className="meal-coach-comment-label">陸斗さんから</p>
-                    <p className="meal-coach-comment-text">{log.coach_comment}</p>
-                  </div>
-                )}
-
-                <label className="meal-field meal-reply-field">
-                  陸斗さんへの一言・任意
-                  <textarea
-                    value={replyDrafts[log.log_date] ?? log.client_reply ?? ''}
-                    onChange={(e) =>
-                      setReplyDrafts((prev) => ({ ...prev, [log.log_date]: e.target.value }))
+          {!historyLoading && !historyError && historyLogs.length > 0 && (
+            <>
+              <div className="meal-calendar">
+                <div className="meal-calendar-nav">
+                  <button type="button" className="meal-calendar-nav-button" onClick={goToPrevMonth}>
+                    ‹
+                  </button>
+                  <p className="meal-calendar-month-label">{formatMonthLabel(calendarMonth)}</p>
+                  <button type="button" className="meal-calendar-nav-button" onClick={goToNextMonth}>
+                    ›
+                  </button>
+                </div>
+                <div className="meal-calendar-weekdays">
+                  {WEEKDAY_LABELS.map((w) => (
+                    <span key={w}>{w}</span>
+                  ))}
+                </div>
+                <div className="meal-calendar-grid">
+                  {buildCalendarCells(calendarMonth).map((dateKey, i) => {
+                    if (!dateKey) {
+                      return <span key={`blank-${i}`} className="meal-calendar-cell meal-calendar-cell-empty" />
                     }
-                    rows={2}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="meal-reply-save"
-                  onClick={() => handleReplySave(log.log_date)}
-                  disabled={replySaving[log.log_date]}
-                >
-                  {replySaving[log.log_date] ? '送信中...' : '返信を送る'}
-                </button>
+                    const hasLog = logsByDate.has(dateKey)
+                    const day = Number(dateKey.split('-')[2])
+                    const isSelected = dateKey === selectedDate
+                    return (
+                      <button
+                        key={dateKey}
+                        type="button"
+                        className={`meal-calendar-cell${hasLog ? ' meal-calendar-cell-has-log' : ''}${isSelected ? ' meal-calendar-cell-selected' : ''}`}
+                        onClick={() => setSelectedDate(dateKey)}
+                        disabled={!hasLog}
+                      >
+                        {day}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            ))}
-          </div>
+
+              {selectedLog ? (
+                <MealDayDetailCard
+                  log={selectedLog}
+                  replyDraft={replyDrafts[selectedLog.log_date] ?? selectedLog.client_reply ?? ''}
+                  onReplyChange={(value) =>
+                    setReplyDrafts((prev) => ({ ...prev, [selectedLog.log_date]: value }))
+                  }
+                  onReplySave={() => handleReplySave(selectedLog.log_date)}
+                  saving={!!replySaving[selectedLog.log_date]}
+                />
+              ) : (
+                <p className="meal-lead">金色の日付をタップすると、その日の記録が見られます。</p>
+              )}
+            </>
+          )}
         </div>
       </main>
     )
@@ -368,7 +466,7 @@ function MealLogPage() {
             別の日を記録する
           </button>
           <button type="button" className="meal-back-link meal-history-link" onClick={openHistory}>
-            過去の記録・陸斗さんからのコメントを見る
+            過去の記録・イクマからのコメントを見る
           </button>
           <a className="meal-back-link" href="/">
             トップページに戻る
@@ -381,16 +479,18 @@ function MealLogPage() {
   return (
     <main className="lp meal-page">
       <div className="meal-container">
-        <p className="lp-hero-eyebrow">イクマ 食事管理記録</p>
+        <p className="lp-hero-eyebrow">食事管理記録</p>
         <h1 className="meal-title">今日の記録をつけよう</h1>
         <p className="meal-lead">
-          食事の内容・体重・気になったことを、思い出せる範囲で大丈夫です。
+          食事の内容・体重・気になったことを、
+          <br />
+          思い出せる範囲で大丈夫です。
           <br />
           同じ日にもう一度送ると、内容が上書きされます。
         </p>
 
         <button type="button" className="meal-back-link meal-history-link" onClick={openHistory}>
-          過去の記録・陸斗さんからのコメントを見る
+          過去の記録・イクマからのコメントを見る
         </button>
 
         <form className="meal-form" onSubmit={handleSubmit}>
