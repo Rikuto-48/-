@@ -76,8 +76,9 @@ function MealLogPage() {
       photoUrl = await uploadPhoto()
     } catch (photoError) {
       console.error('写真のアップロードに失敗しました', photoError)
+      const message = photoError instanceof Error ? photoError.message : String(photoError)
       setSubmitting(false)
-      setError('写真のアップロードに失敗しました。もう一度お試しください。')
+      setError(`写真のアップロードに失敗しました。もう一度お試しください。(詳細: ${message})`)
       return
     }
 
