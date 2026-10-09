@@ -55,6 +55,7 @@ npm run dev
 | `0008_create_meal_logs.sql` | 食事管理ログテーブル `meal_logs` を追加（`name`+`log_date`がユニーク。anonはinsert/update可、authenticatedはselect可） |
 | `0009_meal_log_upsert_function.sql` | `meal_logs`への書き込みをSECURITY DEFINER関数`upsert_meal_log`経由にする。anonにSELECTを与えずに「名前+日付が同じなら上書き」を実現する(ON CONFLICT DO UPDATEは競合先の既存行をSELECTできる必要があり、素のupsertだとRLSに弾かれるため) |
 | `0010_meal_photos_and_weight_history.sql` | `meal_logs`に`photo_url`列を追加し、写真保存用のStorageバケット`meal-photos`(公開・anonはアップロードのみ可)を作成。`upsert_meal_log`を`photo_url`対応版に更新し、本人が自分の体重推移だけを取得できる関数`get_weight_history`を追加 |
+| `0011_meal_photos_per_meal.sql` | 写真を「1日1枚」から「食事ごとに1枚」に変更。`photo_url`を`breakfast_photo_url`/`lunch_photo_url`/`dinner_photo_url`/`snack_photo_url`の4列に置き換え、`upsert_meal_log`も4枚のURLを受け取れるよう更新 |
 
 ### 管理画面ユーザーの作成
 

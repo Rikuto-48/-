@@ -5,6 +5,29 @@ import { getSavedMealLogName, saveMealLogName } from '../lib/mealLogStorage'
 import { compressImage } from '../lib/compressImage'
 import WeightTrendChart from '../components/WeightTrendChart'
 
+type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+
+const MEAL_TYPES: { key: MealType; label: string }[] = [
+  { key: 'breakfast', label: '朝食' },
+  { key: 'lunch', label: '昼食' },
+  { key: 'dinner', label: '夕食' },
+  { key: 'snack', label: '間食' },
+]
+
+const EMPTY_MEAL_TEXTS: Record<MealType, string> = { breakfast: '', lunch: '', dinner: '', snack: '' }
+const EMPTY_MEAL_FILES: Record<MealType, File | null> = {
+  breakfast: null,
+  lunch: null,
+  dinner: null,
+  snack: null,
+}
+const EMPTY_MEAL_PREVIEWS: Record<MealType, string | null> = {
+  breakfast: null,
+  lunch: null,
+  dinner: null,
+  snack: null,
+}
+
 function todayLocalDate(): string {
   const now = new Date()
   const offsetMs = now.getTimezoneOffset() * 60000
@@ -14,42 +37,54 @@ function todayLocalDate(): string {
 function MealLogPage() {
   const [name, setName] = useState(getSavedMealLogName())
   const [logDate, setLogDate] = useState(todayLocalDate())
-  const [breakfast, setBreakfast] = useState('')
-  const [lunch, setLunch] = useState('')
-  const [dinner, setDinner] = useState('')
-  const [snack, setSnack] = useState('')
+  const [mealTexts, setMealTexts] = useState(EMPTY_MEAL_TEXTS)
+  const [mealPhotos, setMealPhotos] = useState(EMPTY_MEAL_FILES)
+  const [mealPhotoPreviews, setMealPhotoPreviews] = useState(EMPTY_MEAL_PREVIEWS)
   const [weight, setWeight] = useState('')
   const [memo, setMemo] = useState('')
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const [weightHistory, setWeightHistory] = useState<{ date: string; weight: number }[]>([])
 
-  function handlePhotoChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null
-    setPhotoFile(file)
-    setPhotoPreviewUrl(file ? URL.createObjectURL(file) : null)
+  function updateMealText(type: MealType, value: string) {
+    setMealTexts((prev) => ({ ...prev, [type]: value }))
   }
 
-  async function uploadPhoto(): Promise<string | null> {
-    if (!photoFile || !supabase) return null
+  function handleMealPhotoChange(type: MealType, e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setMealPhotos((prev) => ({ ...prev, [type]: file }))
+    setMealPhotoPreviews((prev) => ({ ...prev, [type]: file ? URL.createObjectURL(file) : null }))
+  }
 
-    const compressed = await compressImage(photoFile)
-    const path = `${crypto.randomUUID()}.jpg`
+  async function uploadMealPhotos(): Promise<Partial<Record<MealType, string>>> {
+    if (!supabase) return {}
 
-    const { error: uploadError } = await supabase.storage
-      .from('meal-photos')
-      .upload(path, compressed, { contentType: 'image/jpeg' })
+    const entries = await Promise.all(
+      MEAL_TYPES.map(async ({ key }) => {
+        const file = mealPhotos[key]
+        if (!file || !supabase) return [key, null] as const
 
-    if (uploadError) {
-      throw uploadError
-    }
+        const compressed = await compressImage(file)
+        const path = `${crypto.randomUUID()}.jpg`
 
-    const { data } = supabase.storage.from('meal-photos').getPublicUrl(path)
-    return data.publicUrl
+        const { error: uploadError } = await supabase.storage
+          .from('meal-photos')
+          .upload(path, compressed, { contentType: 'image/jpeg' })
+
+        if (uploadError) {
+          throw uploadError
+        }
+
+        const { data } = supabase.storage.from('meal-photos').getPublicUrl(path)
+        return [key, data.publicUrl] as const
+      }),
+    )
+
+    return Object.fromEntries(entries.filter(([, url]) => url !== null)) as Partial<
+      Record<MealType, string>
+    >
   }
 
   async function fetchWeightHistory(forName: string) {
@@ -71,9 +106,9 @@ function MealLogPage() {
     setSubmitting(true)
     setError(null)
 
-    let photoUrl: string | null = null
+    let photos: Partial<Record<MealType, string>> = {}
     try {
-      photoUrl = await uploadPhoto()
+      photos = await uploadMealPhotos()
     } catch (photoError) {
       console.error('写真のアップロードに失敗しました', photoError)
       const message = photoError instanceof Error ? photoError.message : String(photoError)
@@ -85,13 +120,16 @@ function MealLogPage() {
     const { error: upsertError } = await supabase.rpc('upsert_meal_log', {
       p_name: name,
       p_log_date: logDate,
-      p_breakfast: breakfast || null,
-      p_lunch: lunch || null,
-      p_dinner: dinner || null,
-      p_snack: snack || null,
+      p_breakfast: mealTexts.breakfast || null,
+      p_lunch: mealTexts.lunch || null,
+      p_dinner: mealTexts.dinner || null,
+      p_snack: mealTexts.snack || null,
       p_weight: weight ? Number(weight) : null,
       p_memo: memo || null,
-      p_photo_url: photoUrl,
+      p_breakfast_photo_url: photos.breakfast ?? null,
+      p_lunch_photo_url: photos.lunch ?? null,
+      p_dinner_photo_url: photos.dinner ?? null,
+      p_snack_photo_url: photos.snack ?? null,
     })
 
     setSubmitting(false)
@@ -110,14 +148,11 @@ function MealLogPage() {
   function handleLogAnother() {
     setDone(false)
     setLogDate(todayLocalDate())
-    setBreakfast('')
-    setLunch('')
-    setDinner('')
-    setSnack('')
+    setMealTexts(EMPTY_MEAL_TEXTS)
+    setMealPhotos(EMPTY_MEAL_FILES)
+    setMealPhotoPreviews(EMPTY_MEAL_PREVIEWS)
     setWeight('')
     setMemo('')
-    setPhotoFile(null)
-    setPhotoPreviewUrl(null)
   }
 
   if (done) {
@@ -174,25 +209,34 @@ function MealLogPage() {
             />
           </label>
 
-          <label className="meal-field">
-            朝食
-            <textarea value={breakfast} onChange={(e) => setBreakfast(e.target.value)} rows={2} />
-          </label>
-
-          <label className="meal-field">
-            昼食
-            <textarea value={lunch} onChange={(e) => setLunch(e.target.value)} rows={2} />
-          </label>
-
-          <label className="meal-field">
-            夕食
-            <textarea value={dinner} onChange={(e) => setDinner(e.target.value)} rows={2} />
-          </label>
-
-          <label className="meal-field">
-            間食
-            <textarea value={snack} onChange={(e) => setSnack(e.target.value)} rows={2} />
-          </label>
+          {MEAL_TYPES.map(({ key, label }) => (
+            <div key={key} className="meal-field-group">
+              <label className="meal-field">
+                {label}
+                <textarea
+                  value={mealTexts[key]}
+                  onChange={(e) => updateMealText(key, e.target.value)}
+                  rows={2}
+                />
+              </label>
+              <label className="meal-field meal-photo-field">
+                {label}の写真・任意
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => handleMealPhotoChange(key, e)}
+                />
+              </label>
+              {mealPhotoPreviews[key] && (
+                <img
+                  src={mealPhotoPreviews[key] ?? undefined}
+                  alt={`${label}の写真プレビュー`}
+                  className="meal-photo-preview"
+                />
+              )}
+            </div>
+          ))}
 
           <label className="meal-field">
             体重(kg)・任意
@@ -204,14 +248,6 @@ function MealLogPage() {
               onChange={(e) => setWeight(e.target.value)}
             />
           </label>
-
-          <label className="meal-field">
-            写真・任意
-            <input type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} />
-          </label>
-          {photoPreviewUrl && (
-            <img src={photoPreviewUrl} alt="アップロードする写真のプレビュー" className="meal-photo-preview" />
-          )}
 
           <label className="meal-field">
             一言メモ・任意

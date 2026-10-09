@@ -12,7 +12,32 @@ interface MealLog {
   snack: string | null
   weight: number | null
   memo: string | null
-  photo_url: string | null
+  breakfast_photo_url: string | null
+  lunch_photo_url: string | null
+  dinner_photo_url: string | null
+  snack_photo_url: string | null
+}
+
+const MEAL_COLUMNS: { label: string; textKey: keyof MealLog; photoKey: keyof MealLog }[] = [
+  { label: '朝食', textKey: 'breakfast', photoKey: 'breakfast_photo_url' },
+  { label: '昼食', textKey: 'lunch', photoKey: 'lunch_photo_url' },
+  { label: '夕食', textKey: 'dinner', photoKey: 'dinner_photo_url' },
+  { label: '間食', textKey: 'snack', photoKey: 'snack_photo_url' },
+]
+
+function MealCell({ text, photoUrl, logDate, label }: { text: string | null; photoUrl: string | null; logDate: string; label: string }) {
+  if (!text && !photoUrl) return <>-</>
+
+  return (
+    <div className="meal-cell">
+      {text && <p className="meal-cell-text">{text}</p>}
+      {photoUrl && (
+        <a href={photoUrl} target="_blank" rel="noopener noreferrer">
+          <img src={photoUrl} alt={`${logDate}の${label}の写真`} className="meal-log-thumb" />
+        </a>
+      )}
+    </div>
+  )
 }
 
 interface PersonSummary {
@@ -110,7 +135,6 @@ function MealsAdminPage() {
                 <th>夕食</th>
                 <th>間食</th>
                 <th>体重</th>
-                <th>写真</th>
                 <th>メモ</th>
               </tr>
             </thead>
@@ -118,20 +142,17 @@ function MealsAdminPage() {
               {selectedPerson.logs.map((log) => (
                 <tr key={log.id}>
                   <td>{log.log_date}</td>
-                  <td>{log.breakfast ?? '-'}</td>
-                  <td>{log.lunch ?? '-'}</td>
-                  <td>{log.dinner ?? '-'}</td>
-                  <td>{log.snack ?? '-'}</td>
+                  {MEAL_COLUMNS.map(({ label, textKey, photoKey }) => (
+                    <td key={textKey}>
+                      <MealCell
+                        text={log[textKey] as string | null}
+                        photoUrl={log[photoKey] as string | null}
+                        logDate={log.log_date}
+                        label={label}
+                      />
+                    </td>
+                  ))}
                   <td>{log.weight !== null ? `${log.weight}kg` : '-'}</td>
-                  <td>
-                    {log.photo_url ? (
-                      <a href={log.photo_url} target="_blank" rel="noopener noreferrer">
-                        <img src={log.photo_url} alt={`${log.log_date}の食事写真`} className="meal-log-thumb" />
-                      </a>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
                   <td>{log.memo ?? '-'}</td>
                 </tr>
               ))}
