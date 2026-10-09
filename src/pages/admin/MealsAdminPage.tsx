@@ -16,6 +16,8 @@ interface MealLog {
   lunch_photo_url: string | null
   dinner_photo_url: string | null
   snack_photo_url: string | null
+  coach_comment: string | null
+  client_reply: string | null
 }
 
 const MEAL_COLUMNS: { label: string; textKey: keyof MealLog; photoKey: keyof MealLog }[] = [
@@ -36,6 +38,33 @@ function MealCell({ text, photoUrl, logDate, label }: { text: string | null; pho
           <img src={photoUrl} alt={`${logDate}の${label}の写真`} className="meal-log-thumb" />
         </a>
       )}
+    </div>
+  )
+}
+
+function CommentCell({ log, onSave }: { log: MealLog; onSave: (logId: string, comment: string) => void }) {
+  const [draft, setDraft] = useState(log.coach_comment ?? '')
+  const [saving, setSaving] = useState(false)
+
+  async function handleSave() {
+    setSaving(true)
+    await onSave(log.id, draft)
+    setSaving(false)
+  }
+
+  return (
+    <div className="meal-comment-cell">
+      <textarea
+        className="meal-comment-input"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        rows={2}
+        placeholder="一言コメント"
+      />
+      <button type="button" className="meal-comment-save" onClick={handleSave} disabled={saving}>
+        {saving ? '保存中...' : '保存'}
+      </button>
+      {log.client_reply && <p className="meal-client-reply">本人からの返信: {log.client_reply}</p>}
     </div>
   )
 }
@@ -103,6 +132,15 @@ function MealsAdminPage() {
     void fetchLogs()
   }, [])
 
+  async function handleCommentSave(logId: string, comment: string) {
+    if (!supabase) return
+    await supabase
+      .from('meal_logs')
+      .update({ coach_comment: comment || null })
+      .eq('id', logId)
+    setLogs((prev) => prev.map((l) => (l.id === logId ? { ...l, coach_comment: comment || null } : l)))
+  }
+
   const people = summarizeByName(logs)
   const selectedPerson = people.find((p) => p.name === selectedName) ?? null
 
@@ -136,6 +174,7 @@ function MealsAdminPage() {
                 <th>間食</th>
                 <th>体重</th>
                 <th>メモ</th>
+                <th>コーチコメント</th>
               </tr>
             </thead>
             <tbody>
@@ -154,6 +193,9 @@ function MealsAdminPage() {
                   ))}
                   <td>{log.weight !== null ? `${log.weight}kg` : '-'}</td>
                   <td>{log.memo ?? '-'}</td>
+                  <td>
+                    <CommentCell log={log} onSave={handleCommentSave} />
+                  </td>
                 </tr>
               ))}
             </tbody>

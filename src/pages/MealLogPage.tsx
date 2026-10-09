@@ -28,6 +28,35 @@ const EMPTY_MEAL_PREVIEWS: Record<MealType, string | null> = {
   snack: null,
 }
 
+interface MealHistoryLog {
+  log_date: string
+  breakfast: string | null
+  lunch: string | null
+  dinner: string | null
+  snack: string | null
+  weight: number | null
+  memo: string | null
+  breakfast_photo_url: string | null
+  lunch_photo_url: string | null
+  dinner_photo_url: string | null
+  snack_photo_url: string | null
+  coach_comment: string | null
+  client_reply: string | null
+}
+
+function getMealField(log: MealHistoryLog, key: MealType): { text: string | null; photoUrl: string | null } {
+  switch (key) {
+    case 'breakfast':
+      return { text: log.breakfast, photoUrl: log.breakfast_photo_url }
+    case 'lunch':
+      return { text: log.lunch, photoUrl: log.lunch_photo_url }
+    case 'dinner':
+      return { text: log.dinner, photoUrl: log.dinner_photo_url }
+    case 'snack':
+      return { text: log.snack, photoUrl: log.snack_photo_url }
+  }
+}
+
 function todayLocalDate(): string {
   const now = new Date()
   const offsetMs = now.getTimezoneOffset() * 60000
@@ -47,6 +76,13 @@ function MealLogPage() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const [weightHistory, setWeightHistory] = useState<{ date: string; weight: number }[]>([])
+
+  const [viewMode, setViewMode] = useState<'form' | 'history'>('form')
+  const [historyLogs, setHistoryLogs] = useState<MealHistoryLog[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState<string | null>(null)
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({})
+  const [replySaving, setReplySaving] = useState<Record<string, boolean>>({})
 
   function updateMealText(type: MealType, value: string) {
     setMealTexts((prev) => ({ ...prev, [type]: value }))
@@ -155,6 +191,135 @@ function MealLogPage() {
     setMemo('')
   }
 
+  async function openHistory() {
+    setViewMode('history')
+    setDone(false)
+
+    if (!name) {
+      setHistoryError('お名前を入力してから見てください。')
+      return
+    }
+
+    if (!supabase) {
+      setHistoryError('現在、記録を確認できません。時間をおいて再度お試しください。')
+      return
+    }
+
+    setHistoryLoading(true)
+    setHistoryError(null)
+
+    const { data, error: fetchError } = await supabase.rpc('get_my_meal_logs', { p_name: name })
+
+    setHistoryLoading(false)
+
+    if (fetchError) {
+      console.error('記録の取得に失敗しました', fetchError)
+      setHistoryError(`記録の取得に失敗しました。(詳細: ${fetchError.message})`)
+      return
+    }
+
+    setHistoryLogs((data as MealHistoryLog[]) ?? [])
+  }
+
+  async function handleReplySave(targetLogDate: string) {
+    if (!supabase) return
+
+    setReplySaving((prev) => ({ ...prev, [targetLogDate]: true }))
+    const reply = replyDrafts[targetLogDate] ?? ''
+
+    const { error: replyError } = await supabase.rpc('set_client_reply', {
+      p_name: name,
+      p_log_date: targetLogDate,
+      p_reply: reply || null,
+    })
+
+    setReplySaving((prev) => ({ ...prev, [targetLogDate]: false }))
+
+    if (replyError) {
+      console.error('返信の送信に失敗しました', replyError)
+      return
+    }
+
+    setHistoryLogs((prev) =>
+      prev.map((l) => (l.log_date === targetLogDate ? { ...l, client_reply: reply || null } : l)),
+    )
+  }
+
+  if (viewMode === 'history') {
+    return (
+      <main className="lp meal-page">
+        <div className="meal-container">
+          <button type="button" className="meal-back-link meal-history-back" onClick={() => setViewMode('form')}>
+            ← 記録フォームに戻る
+          </button>
+          <h1 className="meal-title">{name ? `${name}さんの記録` : 'あなたの記録'}</h1>
+
+          {historyLoading && <p className="meal-lead">読み込み中...</p>}
+          {historyError && <p className="form-error meal-error">{historyError}</p>}
+
+          {!historyLoading && !historyError && historyLogs.length === 0 && (
+            <p className="meal-lead">まだ記録がありません。</p>
+          )}
+
+          <div className="meal-history-list">
+            {historyLogs.map((log) => (
+              <div key={log.log_date} className="meal-history-card">
+                <p className="meal-history-date">{log.log_date}</p>
+
+                {MEAL_TYPES.map(({ key, label }) => {
+                  const { text, photoUrl } = getMealField(log, key)
+                  if (!text && !photoUrl) return null
+                  return (
+                    <div key={key} className="meal-history-meal">
+                      <p className="meal-history-meal-label">{label}</p>
+                      {text && <p className="meal-history-meal-text">{text}</p>}
+                      {photoUrl && (
+                        <img
+                          src={photoUrl}
+                          alt={`${log.log_date}の${label}の写真`}
+                          className="meal-history-photo"
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+
+                {log.weight !== null && <p className="meal-history-weight">体重: {log.weight}kg</p>}
+                {log.memo && <p className="meal-history-memo">メモ: {log.memo}</p>}
+
+                {log.coach_comment && (
+                  <div className="meal-coach-comment">
+                    <p className="meal-coach-comment-label">陸斗さんから</p>
+                    <p className="meal-coach-comment-text">{log.coach_comment}</p>
+                  </div>
+                )}
+
+                <label className="meal-field meal-reply-field">
+                  陸斗さんへの一言・任意
+                  <textarea
+                    value={replyDrafts[log.log_date] ?? log.client_reply ?? ''}
+                    onChange={(e) =>
+                      setReplyDrafts((prev) => ({ ...prev, [log.log_date]: e.target.value }))
+                    }
+                    rows={2}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="meal-reply-save"
+                  onClick={() => handleReplySave(log.log_date)}
+                  disabled={replySaving[log.log_date]}
+                >
+                  {replySaving[log.log_date] ? '送信中...' : '返信を送る'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   if (done) {
     return (
       <main className="lp meal-page">
@@ -174,6 +339,9 @@ function MealLogPage() {
           <button type="button" className="lp-primary-button meal-done-button" onClick={handleLogAnother}>
             別の日を記録する
           </button>
+          <button type="button" className="meal-back-link meal-history-link" onClick={openHistory}>
+            過去の記録・陸斗さんからのコメントを見る
+          </button>
           <a className="meal-back-link" href="/">
             トップページに戻る
           </a>
@@ -192,6 +360,10 @@ function MealLogPage() {
           <br />
           同じ日にもう一度送ると、内容が上書きされます。
         </p>
+
+        <button type="button" className="meal-back-link meal-history-link" onClick={openHistory}>
+          過去の記録・陸斗さんからのコメントを見る
+        </button>
 
         <form className="meal-form" onSubmit={handleSubmit}>
           <label className="meal-field">

@@ -967,6 +967,43 @@ p {
   margin: 0;
 }
 
+.meal-comment-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.meal-comment-input {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.meal-comment-save {
+  align-self: flex-start;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.meal-client-reply {
+  font-size: 12px;
+  color: var(--text);
+  background: #f4f2fb;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin: 0;
+}
+
 .meal-done {
   text-align: center;
   padding-top: 96px;
@@ -996,6 +1033,121 @@ p {
   font-size: 13px;
   color: var(--lp-text-muted);
   text-decoration: underline;
+}
+
+button.meal-back-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  width: 100%;
+  text-align: center;
+}
+
+.meal-history-link {
+  margin: 0 0 24px;
+}
+
+.meal-history-back {
+  margin: 0 0 20px;
+  text-align: left;
+}
+
+.meal-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.meal-history-card {
+  padding: 18px;
+  background: var(--lp-card);
+  border: 1px solid var(--lp-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.meal-history-date {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--lp-gold);
+  margin: 0;
+}
+
+.meal-history-meal {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meal-history-meal-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--lp-gold-soft);
+  margin: 0;
+}
+
+.meal-history-meal-text {
+  font-size: 14px;
+  color: var(--lp-text);
+  margin: 0;
+}
+
+.meal-history-photo {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--lp-border);
+}
+
+.meal-history-weight,
+.meal-history-memo {
+  font-size: 13px;
+  color: var(--lp-text-muted);
+  margin: 0;
+}
+
+.meal-coach-comment {
+  padding: 10px 12px;
+  background: #201a0d;
+  border: 1px solid var(--lp-gold-dark);
+  border-radius: 6px;
+}
+
+.meal-coach-comment-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--lp-gold);
+  margin: 0 0 4px;
+  letter-spacing: 0.04em;
+}
+
+.meal-coach-comment-text {
+  font-size: 14px;
+  color: var(--lp-text);
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.meal-reply-field {
+  margin-top: 4px;
+}
+
+.meal-reply-save {
+  align-self: flex-start;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1305;
+  background: var(--lp-gold);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 /* 管理画面: 食事管理 */
