@@ -12,6 +12,7 @@ interface MealLog {
   snack: string | null
   weight: number | null
   memo: string | null
+  photo_url: string | null
 }
 
 interface PersonSummary {
@@ -109,6 +110,7 @@ function MealsAdminPage() {
                 <th>夕食</th>
                 <th>間食</th>
                 <th>体重</th>
+                <th>写真</th>
                 <th>メモ</th>
               </tr>
             </thead>
@@ -121,6 +123,15 @@ function MealsAdminPage() {
                   <td>{log.dinner ?? '-'}</td>
                   <td>{log.snack ?? '-'}</td>
                   <td>{log.weight !== null ? `${log.weight}kg` : '-'}</td>
+                  <td>
+                    {log.photo_url ? (
+                      <a href={log.photo_url} target="_blank" rel="noopener noreferrer">
+                        <img src={log.photo_url} alt={`${log.log_date}の食事写真`} className="meal-log-thumb" />
+                      </a>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
                   <td>{log.memo ?? '-'}</td>
                 </tr>
               ))}

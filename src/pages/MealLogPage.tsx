@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import type { FormEvent } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { getSavedMealLogName, saveMealLogName } from '../lib/mealLogStorage'
+import { compressImage } from '../lib/compressImage'
+import WeightTrendChart from '../components/WeightTrendChart'
 
 function todayLocalDate(): string {
   const now = new Date()
@@ -18,10 +20,45 @@ function MealLogPage() {
   const [snack, setSnack] = useState('')
   const [weight, setWeight] = useState('')
   const [memo, setMemo] = useState('')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+  const [weightHistory, setWeightHistory] = useState<{ date: string; weight: number }[]>([])
+
+  function handlePhotoChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setPhotoFile(file)
+    setPhotoPreviewUrl(file ? URL.createObjectURL(file) : null)
+  }
+
+  async function uploadPhoto(): Promise<string | null> {
+    if (!photoFile || !supabase) return null
+
+    const compressed = await compressImage(photoFile)
+    const path = `${crypto.randomUUID()}.jpg`
+
+    const { error: uploadError } = await supabase.storage
+      .from('meal-photos')
+      .upload(path, compressed, { contentType: 'image/jpeg' })
+
+    if (uploadError) {
+      throw uploadError
+    }
+
+    const { data } = supabase.storage.from('meal-photos').getPublicUrl(path)
+    return data.publicUrl
+  }
+
+  async function fetchWeightHistory(forName: string) {
+    if (!supabase) return
+    const { data } = await supabase.rpc('get_weight_history', { p_name: forName })
+    if (data) {
+      setWeightHistory(data as { date: string; weight: number }[])
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -34,6 +71,16 @@ function MealLogPage() {
     setSubmitting(true)
     setError(null)
 
+    let photoUrl: string | null = null
+    try {
+      photoUrl = await uploadPhoto()
+    } catch (photoError) {
+      console.error('写真のアップロードに失敗しました', photoError)
+      setSubmitting(false)
+      setError('写真のアップロードに失敗しました。もう一度お試しください。')
+      return
+    }
+
     const { error: upsertError } = await supabase.rpc('upsert_meal_log', {
       p_name: name,
       p_log_date: logDate,
@@ -43,6 +90,7 @@ function MealLogPage() {
       p_snack: snack || null,
       p_weight: weight ? Number(weight) : null,
       p_memo: memo || null,
+      p_photo_url: photoUrl,
     })
 
     setSubmitting(false)
@@ -54,6 +102,7 @@ function MealLogPage() {
     }
 
     saveMealLogName(name)
+    await fetchWeightHistory(name)
     setDone(true)
   }
 
@@ -66,6 +115,8 @@ function MealLogPage() {
     setSnack('')
     setWeight('')
     setMemo('')
+    setPhotoFile(null)
+    setPhotoPreviewUrl(null)
   }
 
   if (done) {
@@ -74,6 +125,16 @@ function MealLogPage() {
         <div className="meal-container meal-done">
           <p className="meal-done-title">記録ありがとうございます！</p>
           <p className="meal-done-lead">次回も気軽に記録してくださいね。</p>
+
+          {weightHistory.length > 0 && (
+            <div className="meal-weight-history">
+              <p className="meal-weight-history-title">あなたの体重推移</p>
+              <div className="weight-chart-wrap">
+                <WeightTrendChart points={weightHistory} />
+              </div>
+            </div>
+          )}
+
           <button type="button" className="lp-primary-button meal-done-button" onClick={handleLogAnother}>
             別の日を記録する
           </button>
@@ -142,6 +203,14 @@ function MealLogPage() {
               onChange={(e) => setWeight(e.target.value)}
             />
           </label>
+
+          <label className="meal-field">
+            写真・任意
+            <input type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} />
+          </label>
+          {photoPreviewUrl && (
+            <img src={photoPreviewUrl} alt="アップロードする写真のプレビュー" className="meal-photo-preview" />
+          )}
 
           <label className="meal-field">
             一言メモ・任意

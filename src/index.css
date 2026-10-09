@@ -1021,3 +1021,59 @@ p {
   font-size: 14px;
   color: var(--text);
 }
+
+/* /mealページ(ダーク×ゴールド)内に体重グラフを置く場合の配色上書き */
+.lp .weight-chart-wrap {
+  background: var(--lp-card);
+  border-color: var(--lp-border);
+}
+
+.lp .weight-chart-baseline {
+  stroke: var(--lp-border);
+}
+
+.lp .weight-chart-line {
+  stroke: var(--lp-gold);
+}
+
+.lp .weight-chart-dot {
+  fill: var(--lp-gold);
+  stroke: var(--lp-bg);
+}
+
+.lp .weight-chart-label {
+  fill: var(--lp-text);
+}
+
+.lp .weight-chart-empty {
+  color: var(--lp-text-muted);
+}
+
+.meal-photo-preview {
+  width: 100%;
+  max-width: 220px;
+  border-radius: 8px;
+  border: 1px solid var(--lp-border);
+  margin-top: -8px;
+}
+
+.meal-weight-history {
+  margin: 28px 0;
+  text-align: left;
+}
+
+.meal-weight-history-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--lp-gold-soft);
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.meal-log-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
