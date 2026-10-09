@@ -321,11 +321,39 @@ function MealLogPage() {
   }
 
   if (done) {
+    const hasAnyContent =
+      MEAL_TYPES.some(({ key }) => mealTexts[key] || mealPhotoPreviews[key]) || weight || memo
+
     return (
       <main className="lp meal-page">
         <div className="meal-container meal-done">
-          <p className="meal-done-title">記録ありがとうございます！</p>
-          <p className="meal-done-lead">次回も気軽に記録してくださいね。</p>
+          <p className="meal-done-badge">✓</p>
+          <p className="meal-done-title">記録完了！お疲れ様でした</p>
+          <p className="meal-done-lead">今日も記録できました。次回も気軽につけてくださいね。</p>
+
+          {hasAnyContent && (
+            <div className="meal-done-summary">
+              <p className="meal-done-summary-date">{logDate}の記録</p>
+
+              {MEAL_TYPES.map(({ key, label }) => {
+                const text = mealTexts[key]
+                const preview = mealPhotoPreviews[key]
+                if (!text && !preview) return null
+                return (
+                  <div key={key} className="meal-history-meal">
+                    <p className="meal-history-meal-label">{label}</p>
+                    {text && <p className="meal-history-meal-text">{text}</p>}
+                    {preview && (
+                      <img src={preview} alt={`${label}の写真`} className="meal-history-photo" />
+                    )}
+                  </div>
+                )
+              })}
+
+              {weight && <p className="meal-history-weight">体重: {weight}kg</p>}
+              {memo && <p className="meal-history-memo">メモ: {memo}</p>}
+            </div>
+          )}
 
           {weightHistory.length > 0 && (
             <div className="meal-weight-history">
@@ -393,12 +421,7 @@ function MealLogPage() {
               </label>
               <label className="meal-field meal-photo-field">
                 {label}の写真・任意
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={(e) => handleMealPhotoChange(key, e)}
-                />
+                <input type="file" accept="image/*" onChange={(e) => handleMealPhotoChange(key, e)} />
               </label>
               {mealPhotoPreviews[key] && (
                 <img

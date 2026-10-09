@@ -1017,7 +1017,19 @@ p {
 
 .meal-done {
   text-align: center;
-  padding-top: 96px;
+  padding-top: 48px;
+}
+
+.meal-done-badge {
+  width: 56px;
+  height: 56px;
+  line-height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: var(--lp-gold-bright);
+  color: #1a1305;
+  font-size: 26px;
+  font-weight: 800;
 }
 
 .meal-done-title {
@@ -1031,6 +1043,25 @@ p {
   font-size: 14px;
   color: var(--lp-text-muted);
   margin-bottom: 28px;
+}
+
+.meal-done-summary {
+  text-align: left;
+  background: var(--lp-card);
+  border: 1px solid var(--lp-border);
+  border-radius: 8px;
+  padding: 18px;
+  margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.meal-done-summary-date {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--lp-gold);
+  margin: 0 0 4px;
 }
 
 .meal-done-button {
