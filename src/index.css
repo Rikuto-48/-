@@ -866,3 +866,158 @@ p {
   text-decoration: underline;
   margin-top: 12px;
 }
+
+.lp-meal-cta-lead {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--lp-text-muted);
+  text-align: center;
+  max-width: 480px;
+  margin: 0 auto 24px;
+}
+
+/* 食事記録ページ(/meal) */
+.meal-container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 56px 20px 64px;
+}
+
+.meal-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--lp-text-h);
+  text-align: center;
+  margin: 14px 0 12px;
+}
+
+.meal-lead {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--lp-text-muted);
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.meal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.meal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lp-gold-soft);
+}
+
+.meal-field input,
+.meal-field textarea {
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  padding: 12px 14px;
+  background: var(--lp-card);
+  border: 1px solid var(--lp-border);
+  border-radius: 6px;
+  color: var(--lp-text);
+  resize: vertical;
+}
+
+.meal-field input:focus,
+.meal-field textarea:focus {
+  outline: none;
+  border-color: var(--lp-gold);
+}
+
+.meal-error {
+  text-align: center;
+}
+
+.meal-done {
+  text-align: center;
+  padding-top: 96px;
+}
+
+.meal-done-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--lp-text-h);
+  margin-bottom: 10px;
+}
+
+.meal-done-lead {
+  font-size: 14px;
+  color: var(--lp-text-muted);
+  margin-bottom: 28px;
+}
+
+.meal-done-button {
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.meal-back-link {
+  display: block;
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--lp-text-muted);
+  text-decoration: underline;
+}
+
+/* 管理画面: 食事管理 */
+.meal-back-button {
+  background: none;
+  border: none;
+  color: var(--accent-dark);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 16px;
+}
+
+.weight-chart-wrap {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  max-width: 400px;
+}
+
+.weight-chart {
+  width: 100%;
+  height: auto;
+}
+
+.weight-chart-baseline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.weight-chart-line {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.weight-chart-dot {
+  fill: var(--accent);
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+.weight-chart-label {
+  font-size: 10px;
+  fill: var(--text);
+}
+
+.weight-chart-empty {
+  font-size: 14px;
+  color: var(--text);
+}

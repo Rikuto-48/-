@@ -9,6 +9,7 @@
 - フェーズ⑤「今日のLINE配信リスト」（陸斗さん専用・要ログイン）: 見込み客の7日間チャレンジ進捗をもとに、今日送るべきLINEメッセージの文面を自動生成（送信自体は手動。LINE Messaging APIとの自動配信連携は未実装）
 - フェーズ⑥「Instagramデータ管理」（陸斗さん専用・要ログイン）: Instagram Graph APIと連携し、フォロワー数・リーチなどのアカウント実績と投稿ごとの実績を自動取得。取得した投稿実績はコンテンツカレンダーに反映可能
 - フェーズ⑦「X投稿予約」（陸斗さん専用・要ログイン）: X(旧Twitter)の投稿文と日時を登録すると、X API v2で予約日時に自動投稿。下書き保存・即時投稿・失敗時のエラー表示に対応
+- フェーズ⑧「食事管理記録」: アカウント登録不要の公開ページ(`/meal`)で、誰でも食事内容・体重・一言メモを記録できる。陸斗さんは管理画面(`/admin/meals`)から全員の記録を名前ごとに閲覧し、体重の推移をグラフで確認できる
 
 いずれも実装済み。スマホ表示前提のレスポンシブUI。
 
@@ -51,6 +52,7 @@ npm run dev
 | `0005_add_instagram_metrics.sql` | Instagram同期用テーブル `instagram_account_metrics`（アカウント日次実績）・`instagram_media_insights`（投稿ごとの実績）を追加 |
 | `0006_add_diagnosis_source.sql` | 診断結果に流入元 `source` を追加（診断ページURLの `?src=x` 等を保存。X経由の診断数を計測） |
 | `0007_create_x_posts.sql` | X予約投稿テーブル `x_posts` を追加（本文・予約日時・投稿ステータスを管理） |
+| `0008_create_meal_logs.sql` | 食事管理ログテーブル `meal_logs` を追加（`name`+`log_date`がユニーク。anonはinsert/update可、authenticatedはselect可） |
 
 ### 管理画面ユーザーの作成
 
@@ -62,14 +64,24 @@ Supabaseダッシュボード > Authentication から、陸斗さん用のユー
 ```
 src/
   data/         診断の設問・タイプ定義、ステータス選択肢、コンテンツピラー、LINEメッセージテンプレート
-  lib/          Supabaseクライアント・認証コンテキスト・保存処理・LINE配信キュー算出ロジック
-  components/   共通UIコンポーネント(ProtectedRouteなど)
-  pages/        診断ページ・結果ページ
-  pages/admin/  管理画面(ログイン・見込み客管理・コンテンツカレンダー・実績ダッシュボード・今日のLINE配信リスト・Instagramデータ管理)
+  lib/          Supabaseクライアント・認証コンテキスト・保存処理・LINE配信キュー算出ロジック・食事記録の名前保存(localStorage)
+  components/   共通UIコンポーネント(ProtectedRoute、体重推移グラフなど)
+  pages/        診断ページ・結果ページ・食事記録ページ(/meal)
+  pages/admin/  管理画面(ログイン・見込み客管理・コンテンツカレンダー・実績ダッシュボード・今日のLINE配信リスト・Instagramデータ管理・食事管理)
 supabase/
   migrations/   Supabaseのテーブル定義
   functions/    Edge Function(Instagram Graph API同期)
 ```
+
+## 食事管理記録について
+
+`/meal` はログイン不要の公開ページ。初回入力した名前をブラウザのlocalStorageに保存し、
+次回以降は自動入力される(ブラウザやデバイスを変えると再入力が必要)。
+同じ名前・同じ日付で送信すると、その日のレコードが上書きされる(1人1日1レコード)。
+日中に複数回記録する場合、未入力のまま送信した項目は空で上書きされる点に注意。
+
+陸斗さんは `/admin/meals` から全員の記録を名前ごとに一覧でき、名前をクリックすると
+その人の日別記録と体重推移のグラフを確認できる。
 
 ## 今日のLINE配信リストについて
 

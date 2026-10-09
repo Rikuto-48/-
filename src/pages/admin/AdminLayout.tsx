@@ -13,6 +13,9 @@ function AdminLayout() {
           <NavLink to="/admin/leads" className={({ isActive }) => (isActive ? 'active' : '')}>
             見込み客管理
           </NavLink>
+          <NavLink to="/admin/meals" className={({ isActive }) => (isActive ? 'active' : '')}>
+            食事管理
+          </NavLink>
           <NavLink to="/admin/calendar" className={({ isActive }) => (isActive ? 'active' : '')}>
             コンテンツカレンダー
           </NavLink>

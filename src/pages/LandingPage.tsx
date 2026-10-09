@@ -98,6 +98,19 @@ function LandingPage() {
 
       <PhotoBreak src={TRAINING_PHOTOS[1]} alt={TRAINING_PHOTO_ALTS[1]} tilt="right" />
 
+      {/* 食事記録ツール導線 */}
+      <section className="lp-section">
+        <h2 className="lp-section-title">毎日の記録もサポート</h2>
+        <p className="lp-meal-cta-lead">
+          アカウント登録なしで、その日の食事と体重をサッと記録できます。
+          <br />
+          継続のコツは「気軽に続けられること」から。
+        </p>
+        <a className="lp-primary-button" href="/meal">
+          食事・体重を記録する
+        </a>
+      </section>
+
       {/* 得られるベネフィット */}
       <section className="lp-section">
         <h2 className="lp-section-title">得られる変化</h2>

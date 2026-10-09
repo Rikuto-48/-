@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import DiagnosisPage from './pages/DiagnosisPage'
 import ResultPage from './pages/ResultPage'
+import MealLogPage from './pages/MealLogPage'
 import LoginPage from './pages/admin/LoginPage'
 import AdminLayout from './pages/admin/AdminLayout'
 import LeadsPage from './pages/admin/LeadsPage'
@@ -10,6 +11,7 @@ import AnalyticsPage from './pages/admin/AnalyticsPage'
 import MessageQueuePage from './pages/admin/MessageQueuePage'
 import InstagramSyncPage from './pages/admin/InstagramSyncPage'
 import XPostsPage from './pages/admin/XPostsPage'
+import MealsAdminPage from './pages/admin/MealsAdminPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -18,6 +20,7 @@ function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/diagnosis" element={<DiagnosisPage />} />
       <Route path="/diagnosis/result" element={<ResultPage />} />
+      <Route path="/meal" element={<MealLogPage />} />
 
       <Route path="/admin/login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
@@ -29,6 +32,7 @@ function App() {
           <Route path="/admin/messages" element={<MessageQueuePage />} />
           <Route path="/admin/instagram" element={<InstagramSyncPage />} />
           <Route path="/admin/x-posts" element={<XPostsPage />} />
+          <Route path="/admin/meals" element={<MealsAdminPage />} />
         </Route>
       </Route>
     </Routes>
