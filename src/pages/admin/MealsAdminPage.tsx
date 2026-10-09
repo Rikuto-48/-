@@ -18,6 +18,10 @@ interface MealLog {
   snack_photo_url: string | null
   coach_comment: string | null
   client_reply: string | null
+  estimated_calories: number | null
+  estimated_protein: number | null
+  estimated_fat: number | null
+  estimated_carbs: number | null
 }
 
 const MEAL_COLUMNS: { label: string; textKey: keyof MealLog; photoKey: keyof MealLog }[] = [
@@ -173,6 +177,7 @@ function MealsAdminPage() {
                 <th>夕食</th>
                 <th>間食</th>
                 <th>体重</th>
+                <th>推定カロリー・PFC</th>
                 <th>メモ</th>
                 <th>コーチコメント</th>
               </tr>
@@ -192,6 +197,19 @@ function MealsAdminPage() {
                     </td>
                   ))}
                   <td>{log.weight !== null ? `${log.weight}kg` : '-'}</td>
+                  <td>
+                    {log.estimated_calories !== null ? (
+                      <div className="meal-cell">
+                        <p className="meal-cell-text">
+                          {Math.round(log.estimated_calories)}kcal
+                          (P{Math.round(log.estimated_protein ?? 0)}/F{Math.round(log.estimated_fat ?? 0)}/C
+                          {Math.round(log.estimated_carbs ?? 0)})
+                        </p>
+                      </div>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
                   <td>{log.memo ?? '-'}</td>
                   <td>
                     <CommentCell log={log} onSave={handleCommentSave} />

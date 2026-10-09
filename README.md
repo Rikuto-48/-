@@ -57,6 +57,7 @@ npm run dev
 | `0010_meal_photos_and_weight_history.sql` | `meal_logs`に`photo_url`列を追加し、写真保存用のStorageバケット`meal-photos`(公開・anonはアップロードのみ可)を作成。`upsert_meal_log`を`photo_url`対応版に更新し、本人が自分の体重推移だけを取得できる関数`get_weight_history`を追加 |
 | `0011_meal_photos_per_meal.sql` | 写真を「1日1枚」から「食事ごとに1枚」に変更。`photo_url`を`breakfast_photo_url`/`lunch_photo_url`/`dinner_photo_url`/`snack_photo_url`の4列に置き換え、`upsert_meal_log`も4枚のURLを受け取れるよう更新 |
 | `0012_meal_log_coach_comments.sql` | `meal_logs`に`coach_comment`(陸斗さんのコメント)・`client_reply`(本人の返信)を追加。authenticatedにUPDATE権限を付与し、本人が自分の全記録を取得する`get_my_meal_logs`・返信を保存する`set_client_reply`関数を追加 |
+| `0013_meal_nutrition_estimate.sql` | `meal_logs`に`estimated_calories`/`estimated_protein`/`estimated_fat`/`estimated_carbs`(AI推定のカロリー・PFC)を追加。`upsert_meal_log`・`get_my_meal_logs`を推定値の保存・取得に対応させる |
 
 ### 管理画面ユーザーの作成
 
@@ -74,7 +75,7 @@ src/
   pages/admin/  管理画面(ログイン・見込み客管理・コンテンツカレンダー・実績ダッシュボード・今日のLINE配信リスト・Instagramデータ管理・食事管理)
 supabase/
   migrations/   Supabaseのテーブル定義
-  functions/    Edge Function(Instagram Graph API同期)
+  functions/    Edge Function(Instagram Graph API同期、X自動投稿、食事内容からのカロリー・PFC推定)
 ```
 
 ## 食事管理記録について
@@ -97,6 +98,43 @@ Storageバケット`meal-photos`にアップロードする。バケットは公
 
 陸斗さんは `/admin/meals` から全員の記録を名前ごとに一覧でき、名前をクリックすると
 その人の日別記録(写真のサムネイル付き)と体重推移のグラフを確認できる。
+
+保存時には、その日の食事内容(自由記述テキスト)からおおよそのカロリー・PFC(タンパク質・
+脂質・炭水化物)をAIが推定し、本人の保存完了画面・過去記録、`/admin/meals`の日別記録に
+表示する(詳細は後述の「食事記録のカロリー・PFC推定について」を参照)。推定に失敗しても
+記録そのものの保存は失敗しない(推定値だけ空になる)。
+
+## 食事記録のカロリー・PFC推定について
+
+`/meal` で記録を保存すると、クライアント側からSupabase Edge Function `estimate-meal-nutrition`
+を呼び出し、その日入力した朝食・昼食・夕食・間食のテキストをClaude APIに渡しておおよその
+カロリー・タンパク質・脂質・炭水化物を推定する。推定結果は`meal_logs`の
+`estimated_calories`/`estimated_protein`/`estimated_fat`/`estimated_carbs`に保存される。
+
+このEdge Functionはログイン不要の`/meal`ページから匿名で呼び出す必要があるため、
+`post-to-x`や`sync-instagram`とは異なりAuthorizationヘッダーによる認証チェックは行わない
+（APIキー自体はEdge Function側のシークレットとしてのみ保持し、クライアントには一切渡さない）。
+
+表示側には「あくまで目安であり、正確な値ではありません」という注記を必ず添えており、
+精度を保証するものではない。推定に失敗した場合は該当項目が空のまま記録が保存される
+（同じ日を再度保存すれば再推定される）。
+
+利用にはリポジトリの外で以下の準備が必要（APIキーは本リポジトリにはコミットしない）。
+
+1. [Anthropic Console](https://console.anthropic.com/) にログインし、「API Keys」からAPIキーを発行する
+2. Supabaseに以下のシークレットを設定する
+
+   ```bash
+   supabase secrets set ANTHROPIC_API_KEY=xxxx
+   ```
+
+3. Edge Functionをデプロイする（匿名呼び出しを許可するため `--no-verify-jwt` が必須）
+
+   ```bash
+   supabase functions deploy estimate-meal-nutrition --no-verify-jwt
+   ```
+
+Claude APIの利用には別途Anthropicアカウントでの課金設定が必要（従量課金）。
 
 ## 今日のLINE配信リストについて
 

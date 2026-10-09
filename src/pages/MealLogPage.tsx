@@ -42,6 +42,47 @@ interface MealHistoryLog {
   snack_photo_url: string | null
   coach_comment: string | null
   client_reply: string | null
+  estimated_calories: number | null
+  estimated_protein: number | null
+  estimated_fat: number | null
+  estimated_carbs: number | null
+}
+
+interface NutritionEstimate {
+  calories: number
+  protein: number
+  fat: number
+  carbs: number
+}
+
+function MealNutritionSummary({ nutrition }: { nutrition: NutritionEstimate | null }) {
+  if (!nutrition) return null
+  return (
+    <div className="meal-nutrition-summary">
+      <p className="meal-nutrition-summary-title">AIによる推定カロリー・PFC</p>
+      <div className="meal-nutrition-summary-grid">
+        <div>
+          <p className="meal-nutrition-value">{Math.round(nutrition.calories)}</p>
+          <p className="meal-nutrition-label">kcal</p>
+        </div>
+        <div>
+          <p className="meal-nutrition-value">{Math.round(nutrition.protein)}g</p>
+          <p className="meal-nutrition-label">タンパク質</p>
+        </div>
+        <div>
+          <p className="meal-nutrition-value">{Math.round(nutrition.fat)}g</p>
+          <p className="meal-nutrition-label">脂質</p>
+        </div>
+        <div>
+          <p className="meal-nutrition-value">{Math.round(nutrition.carbs)}g</p>
+          <p className="meal-nutrition-label">炭水化物</p>
+        </div>
+      </div>
+      <p className="meal-nutrition-disclaimer">
+        ※ 入力内容からAIが推定したおおよその値です。あくまで目安であり、正確な値ではありません。
+      </p>
+    </div>
+  )
 }
 
 function getMealField(log: MealHistoryLog, key: MealType): { text: string | null; photoUrl: string | null } {
@@ -113,6 +154,17 @@ function MealDayDetailCard({
       {log.weight !== null && <p className="meal-history-weight">体重: {log.weight}kg</p>}
       {log.memo && <p className="meal-history-memo">メモ: {log.memo}</p>}
 
+      {log.estimated_calories !== null && (
+        <MealNutritionSummary
+          nutrition={{
+            calories: log.estimated_calories,
+            protein: log.estimated_protein ?? 0,
+            fat: log.estimated_fat ?? 0,
+            carbs: log.estimated_carbs ?? 0,
+          }}
+        />
+      )}
+
       {log.coach_comment && (
         <div className="meal-coach-comment">
           <p className="meal-coach-comment-label">イクマから</p>
@@ -150,6 +202,7 @@ function MealLogPage() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const [weightHistory, setWeightHistory] = useState<{ date: string; weight: number }[]>([])
+  const [estimatedNutrition, setEstimatedNutrition] = useState<NutritionEstimate | null>(null)
 
   const [viewMode, setViewMode] = useState<'form' | 'history'>('form')
   const [historyLogs, setHistoryLogs] = useState<MealHistoryLog[]>([])
@@ -199,6 +252,30 @@ function MealLogPage() {
     >
   }
 
+  async function estimateNutrition(): Promise<NutritionEstimate | null> {
+    if (!supabase) return null
+    if (!mealTexts.breakfast && !mealTexts.lunch && !mealTexts.dinner && !mealTexts.snack) return null
+
+    try {
+      const { data, error: invokeError } = await supabase.functions.invoke('estimate-meal-nutrition', {
+        body: {
+          breakfast: mealTexts.breakfast,
+          lunch: mealTexts.lunch,
+          dinner: mealTexts.dinner,
+          snack: mealTexts.snack,
+        },
+      })
+      if (invokeError || !data?.ok) {
+        console.error('カロリー・PFC推定に失敗しました', invokeError ?? data)
+        return null
+      }
+      return { calories: data.calories, protein: data.protein, fat: data.fat, carbs: data.carbs }
+    } catch (estimateError) {
+      console.error('カロリー・PFC推定に失敗しました', estimateError)
+      return null
+    }
+  }
+
   async function fetchWeightHistory(forName: string) {
     if (!supabase) return
     const { data } = await supabase.rpc('get_weight_history', { p_name: forName })
@@ -229,6 +306,9 @@ function MealLogPage() {
       return
     }
 
+    // カロリー・PFC推定はあくまで目安の補助機能のため、失敗しても記録の保存自体は続行する
+    const nutrition = await estimateNutrition()
+
     const { error: upsertError } = await supabase.rpc('upsert_meal_log', {
       p_name: name,
       p_log_date: logDate,
@@ -242,6 +322,10 @@ function MealLogPage() {
       p_lunch_photo_url: photos.lunch ?? null,
       p_dinner_photo_url: photos.dinner ?? null,
       p_snack_photo_url: photos.snack ?? null,
+      p_estimated_calories: nutrition?.calories ?? null,
+      p_estimated_protein: nutrition?.protein ?? null,
+      p_estimated_fat: nutrition?.fat ?? null,
+      p_estimated_carbs: nutrition?.carbs ?? null,
     })
 
     setSubmitting(false)
@@ -253,6 +337,7 @@ function MealLogPage() {
     }
 
     saveMealLogName(name)
+    setEstimatedNutrition(nutrition)
     await fetchWeightHistory(name)
     setDone(true)
   }
@@ -265,6 +350,7 @@ function MealLogPage() {
     setMealPhotoPreviews(EMPTY_MEAL_PREVIEWS)
     setWeight('')
     setMemo('')
+    setEstimatedNutrition(null)
   }
 
   async function openHistory() {
@@ -452,6 +538,8 @@ function MealLogPage() {
               {memo && <p className="meal-history-memo">メモ: {memo}</p>}
             </div>
           )}
+
+          <MealNutritionSummary nutrition={estimatedNutrition} />
 
           {weightHistory.length > 0 && (
             <div className="meal-weight-history">

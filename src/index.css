@@ -1224,6 +1224,51 @@ button.meal-back-link {
   margin: 0;
 }
 
+.meal-nutrition-summary {
+  padding: 12px;
+  background: var(--lp-bg-soft, #faf7f0);
+  border: 1px solid var(--lp-border);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meal-nutrition-summary-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--lp-gold-dark);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.meal-nutrition-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  text-align: center;
+}
+
+.meal-nutrition-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--lp-text);
+  margin: 0;
+}
+
+.meal-nutrition-label {
+  font-size: 11px;
+  color: var(--lp-text-muted);
+  margin: 2px 0 0;
+}
+
+.meal-nutrition-disclaimer {
+  font-size: 11px;
+  color: var(--lp-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
 .meal-coach-comment {
   padding: 10px 12px;
   background: #fbf2d8;
