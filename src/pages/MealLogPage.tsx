@@ -51,7 +51,8 @@ function MealLogPage() {
     setSubmitting(false)
 
     if (upsertError) {
-      setError('保存に失敗しました。もう一度お試しください。')
+      console.error('食事記録の保存に失敗しました', upsertError)
+      setError(`保存に失敗しました。もう一度お試しください。(詳細: ${upsertError.message})`)
       return
     }
 
