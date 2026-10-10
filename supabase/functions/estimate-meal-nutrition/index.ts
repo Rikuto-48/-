@@ -14,7 +14,8 @@
 //      (匿名呼び出しを許可するため --no-verify-jwt が必須)
 
 // 無料枠で使える軽量モデル。Googleのモデル一覧が更新された場合はここだけ変更すればよい。
-const GEMINI_MODEL = 'gemini-2.5-flash'
+// (Google AI StudioのModel selectionで「Paid」ラベルが付いていないものを選ぶこと)
+const GEMINI_MODEL = 'gemini-3.1-flash-lite'
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
 const corsHeaders = {
