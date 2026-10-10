@@ -1,19 +1,21 @@
 // 食事内容の自由記述テキストから、おおよそのカロリー・PFC(タンパク質・脂質・炭水化物)を
-// Claude APIで推定するEdge Function。
+// Google Gemini APIで推定するEdge Function。
 //
 // `/meal`の保存時にクライアントから直接呼ばれるため、ログイン不要の匿名呼び出しを許可する
 // (post-to-xとは異なり、Authorizationヘッダーによる認証チェックは行わない)。
 // あくまで目安の推定値であり、精度を保証するものではない(表示側で注記する)。
 //
 // 事前準備(このリポジトリの外で行う):
-//   1. https://console.anthropic.com/ → API Keys で APIキーを発行する
+//   1. https://aistudio.google.com/ にログインし、「Get API key」からAPIキーを無料で発行する
+//      (クレジットカード登録は不要)
 //   2. Supabaseの Edge Function シークレットとして設定する
-//        supabase secrets set ANTHROPIC_API_KEY=xxxx
+//        supabase secrets set GEMINI_API_KEY=xxxx
 //   3. `supabase functions deploy estimate-meal-nutrition --no-verify-jwt` でデプロイする
 //      (匿名呼び出しを許可するため --no-verify-jwt が必須)
 
-const ANTHROPIC_ENDPOINT = 'https://api.anthropic.com/v1/messages'
-const ANTHROPIC_MODEL = 'claude-haiku-5-5'
+// 無料枠で使える軽量モデル。Googleのモデル一覧が更新された場合はここだけ変更すればよい。
+const GEMINI_MODEL = 'gemini-2.5-flash'
+const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,33 +48,33 @@ function isNutritionEstimate(value: unknown): value is NutritionEstimate {
 }
 
 async function estimateNutrition(apiKey: string, mealText: string): Promise<NutritionEstimate> {
-  const res = await fetch(ANTHROPIC_ENDPOINT, {
+  const systemInstruction =
+    'あなたは栄養士です。ユーザーから1日分の食事内容(自由記述の日本語テキスト)が渡されます。' +
+    'その内容からおおよその合計カロリー(kcal)・タンパク質(g)・脂質(g)・炭水化物(g)を推定してください。' +
+    '記述が曖昧な場合は一般的な標準量を仮定して構いません。' +
+    '回答は次のJSON形式のみを出力してください。説明文やマークダウンの装飾は一切含めないこと: ' +
+    '{"calories": 数値, "protein": 数値, "fat": 数値, "carbs": 数値}'
+
+  const res = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 256,
-      system:
-        'あなたは栄養士です。ユーザーから1日分の食事内容(自由記述の日本語テキスト)が渡されます。' +
-        'その内容からおおよその合計カロリー(kcal)・タンパク質(g)・脂質(g)・炭水化物(g)を推定してください。' +
-        '記述が曖昧な場合は一般的な標準量を仮定して構いません。' +
-        '回答は次のJSON形式のみを出力してください。説明文やマークダウンの装飾は一切含めないこと: ' +
-        '{"calories": 数値, "protein": 数値, "fat": 数値, "carbs": 数値}',
-      messages: [{ role: 'user', content: mealText }],
+      systemInstruction: { parts: [{ text: systemInstruction }] },
+      contents: [{ role: 'user', parts: [{ text: mealText }] }],
+      generationConfig: {
+        maxOutputTokens: 256,
+        responseMimeType: 'application/json',
+      },
     }),
   })
 
   const data = await res.json()
   if (!res.ok) {
-    const message = data?.error?.message ?? `Claude APIの呼び出しに失敗しました(${res.status})`
+    const message = data?.error?.message ?? `Gemini APIの呼び出しに失敗しました(${res.status})`
     throw new Error(message)
   }
 
-  const text = data?.content?.[0]?.text ?? ''
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
   const match = text.match(/\{[\s\S]*\}/)
   if (!match) {
     throw new Error('推定結果の形式が不正です')
@@ -94,9 +96,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
+    const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) {
-      return json({ error: 'ANTHROPIC_API_KEY が未設定です' }, 500)
+      return json({ error: 'GEMINI_API_KEY が未設定です' }, 500)
     }
 
     const body = await req.json().catch(() => null)

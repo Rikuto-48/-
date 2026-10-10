@@ -107,7 +107,7 @@ Storageバケット`meal-photos`にアップロードする。バケットは公
 ## 食事記録のカロリー・PFC推定について
 
 `/meal` で記録を保存すると、クライアント側からSupabase Edge Function `estimate-meal-nutrition`
-を呼び出し、その日入力した朝食・昼食・夕食・間食のテキストをClaude APIに渡しておおよその
+を呼び出し、その日入力した朝食・昼食・夕食・間食のテキストをGoogle Gemini APIに渡しておおよその
 カロリー・タンパク質・脂質・炭水化物を推定する。推定結果は`meal_logs`の
 `estimated_calories`/`estimated_protein`/`estimated_fat`/`estimated_carbs`に保存される。
 
@@ -121,11 +121,12 @@ Storageバケット`meal-photos`にアップロードする。バケットは公
 
 利用にはリポジトリの外で以下の準備が必要（APIキーは本リポジトリにはコミットしない）。
 
-1. [Anthropic Console](https://console.anthropic.com/) にログインし、「API Keys」からAPIキーを発行する
+1. [Google AI Studio](https://aistudio.google.com/) にログインし、「Get API key」からAPIキーを発行する
+   （無料枠が使える。クレジットカード登録は不要）
 2. Supabaseに以下のシークレットを設定する
 
    ```bash
-   supabase secrets set ANTHROPIC_API_KEY=xxxx
+   supabase secrets set GEMINI_API_KEY=xxxx
    ```
 
 3. Edge Functionをデプロイする（匿名呼び出しを許可するため `--no-verify-jwt` が必須）
@@ -134,7 +135,8 @@ Storageバケット`meal-photos`にアップロードする。バケットは公
    supabase functions deploy estimate-meal-nutrition --no-verify-jwt
    ```
 
-Claude APIの利用には別途Anthropicアカウントでの課金設定が必要（従量課金）。
+Gemini APIは無料枠内で利用できる（1分あたり・1日あたりのリクエスト数に上限はあるが、
+この用途の利用規模では十分に収まる）。
 
 ## 今日のLINE配信リストについて
 
