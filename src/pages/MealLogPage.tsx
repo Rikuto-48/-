@@ -391,6 +391,8 @@ function MealLogPage() {
       setCalendarMonth(new Date())
       setSelectedDate(null)
     }
+
+    await fetchWeightHistory(name)
   }
 
   function goToPrevMonth() {
@@ -483,6 +485,15 @@ function MealLogPage() {
                   })}
                 </div>
               </div>
+
+              {weightHistory.length > 0 && (
+                <div className="meal-weight-history">
+                  <p className="meal-weight-history-title">あなたの体重推移</p>
+                  <div className="weight-chart-wrap">
+                    <WeightTrendChart points={weightHistory} />
+                  </div>
+                </div>
+              )}
 
               {selectedLog ? (
                 <MealDayDetailCard
