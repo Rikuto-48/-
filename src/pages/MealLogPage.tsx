@@ -280,7 +280,11 @@ function MealLogPage() {
     if (!supabase) return
     const { data } = await supabase.rpc('get_weight_history', { p_name: forName })
     if (data) {
-      setWeightHistory(data as { date: string; weight: number }[])
+      const points = (data as { log_date: string; weight: number }[]).map((row) => ({
+        date: row.log_date,
+        weight: row.weight,
+      }))
+      setWeightHistory(points)
     }
   }
 
