@@ -1,0 +1,66 @@
+name: 新規タスク
+description: イクマ運営の新規タスクを作成する(進行管理ボード用)
+title: "[タスク] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        タスクを登録すると、自動で「イクマ タスクボード」に乗ります。
+        担当には必ず「担当:○○」ラベルを、進行フェーズが分かる場合は「フェーズ:○○」ラベルも付けてください(右側のLabelsから選択)。
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 目的
+      description: このタスクで何を達成したいか(なぜ必要か)
+      placeholder: 例) LINE導線を2段階に圧縮し、無料相談への到達率を上げる
+    validations:
+      required: true
+  - type: dropdown
+    id: owner
+    attributes:
+      label: 担当
+      description: 主担当を選んでください(複数絡む場合は本文に追記)
+      options:
+        - ネタ担当
+        - 台本・構成担当
+        - キャプション担当
+        - ストーリー担当
+        - リール担当
+        - 動画編集担当
+        - note担当
+        - 運用チーム リール・ストーリー
+        - 公式LINE担当
+        - 定期配信担当
+        - X担当
+        - 分析担当
+        - リサーチ担当
+        - 流行り担当
+        - SNSマーケティング担当
+        - ローンチ担当
+        - 管理ツール開発担当
+        - 経理担当
+        - 筋トレノウハウ担当
+        - 企画課長
+        - 運用課長
+        - ピギー
+    validations:
+      required: true
+  - type: input
+    id: deadline
+    attributes:
+      label: 締切
+      description: YYYY-MM-DD形式。特になければ空欄でOK
+      placeholder: "2026-10-31"
+    validations:
+      required: false
+  - type: textarea
+    id: dod
+    attributes:
+      label: 完了の定義(Definition of Done)
+      description: 何をもって「完了」とみなすか。チェックリスト形式(- [ ] ...)で書くと進捗が見やすくなります
+      placeholder: |
+        - [ ] ◯◯が実装されている
+        - [ ] ◯◯の動作確認が本番環境で済んでいる
+    validations:
+      required: true
