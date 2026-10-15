@@ -1,0 +1,87 @@
+name: タスクハンドオフ自動化
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  handoff:
+    if: github.event.label.name == 'ハンドオフ'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 次の担当に引き継ぐ
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = context.payload.issue.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number });
+            const body = issue.body || '';
+            const labels = issue.labels.map(l => (typeof l === 'string' ? l : l.name));
+
+            const roleLabel = labels.find(l => l.startsWith('担当:'));
+            const currentRole = roleLabel ? roleLabel.replace('担当:', '') : null;
+
+            // 本文から「工程順」セクションを探してパースする
+            const lines = body.split('\n');
+            let seqStart = -1;
+            for (let i = 0; i < lines.length; i++) {
+              if (lines[i].includes('工程順')) { seqStart = i; break; }
+            }
+            let sequence = [];
+            if (seqStart !== -1) {
+              for (let i = seqStart + 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line === '') {
+                  if (sequence.length > 0) break;
+                  continue;
+                }
+                if (line.startsWith('#') || line.startsWith('_') || line.startsWith('>')) continue;
+                const cleaned = line.replace(/^[-*\d.]+\s*/, '').trim();
+                if (cleaned) sequence.push(cleaned);
+              }
+            }
+
+            // トリガーになった「ハンドオフ」ラベルは常に外す
+            await github.rest.issues.removeLabel({ owner, repo, issue_number, name: 'ハンドオフ' }).catch(() => {});
+
+            if (sequence.length === 0 || !currentRole) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number,
+                body: '⚠️ 工程順が設定されていないか、担当ラベルが見つからないため、自動ハンドオフをスキップしました。担当ラベルは手動で更新してください。',
+              });
+              return;
+            }
+
+            const idx = sequence.indexOf(currentRole);
+            if (idx === -1) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number,
+                body: `⚠️ 現在の担当ラベル「担当:${currentRole}」が工程順リストに見つからないため、自動ハンドオフをスキップしました。`,
+              });
+              return;
+            }
+
+            if (idx === sequence.length - 1) {
+              await github.rest.issues.removeLabel({ owner, repo, issue_number, name: `担当:${currentRole}` }).catch(() => {});
+              await github.rest.issues.addLabels({ owner, repo, issue_number, labels: ['フェーズ:投稿済み'] });
+              await github.rest.issues.createComment({
+                owner, repo, issue_number,
+                body: `✅ 最終工程(${currentRole})まで完了しました。`,
+              });
+              await github.rest.issues.update({ owner, repo, issue_number, state: 'closed', state_reason: 'completed' });
+              return;
+            }
+
+            const nextRole = sequence[idx + 1];
+            await github.rest.issues.removeLabel({ owner, repo, issue_number, name: `担当:${currentRole}` }).catch(() => {});
+            await github.rest.issues.addLabels({ owner, repo, issue_number, labels: [`担当:${nextRole}`] });
+            await github.rest.issues.createComment({
+              owner, repo, issue_number,
+              body: `🔁 ハンドオフ: ${currentRole} → **${nextRole}** に工程が進みました。`,
+            });

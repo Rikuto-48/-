@@ -64,3 +64,17 @@ body:
         - [ ] ◯◯の動作確認が本番環境で済んでいる
     validations:
       required: true
+  - type: textarea
+    id: handoff_sequence
+    attributes:
+      label: 工程順(複数の担当で順番に引き継ぐ場合のみ)
+      description: |
+        1行に1担当名(上のドロップダウンの選択肢と同じ表記)。上から順に引き継がれます。
+        入力しておくと、各担当が「ハンドオフ」ラベルを付けたタイミングで次の担当への切り替えが自動化されます。単独担当で完結するタスクは空欄でOK。
+      placeholder: |
+        ネタ担当
+        台本・構成担当
+        キャプション担当
+        動画編集担当
+    validations:
+      required: false
