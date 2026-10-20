@@ -10,6 +10,7 @@
 - フェーズ⑥「Instagramデータ管理」（陸斗さん専用・要ログイン）: Instagram Graph APIと連携し、フォロワー数・リーチなどのアカウント実績と投稿ごとの実績を自動取得。取得した投稿実績はコンテンツカレンダーに反映可能
 - フェーズ⑦「X投稿予約」（陸斗さん専用・要ログイン）: X(旧Twitter)の投稿文と日時を登録すると、X API v2で予約日時に自動投稿。下書き保存・即時投稿・失敗時のエラー表示に対応
 - フェーズ⑧「食事管理記録」: アカウント登録不要の公開ページ(`/meal`)で、誰でも食事内容・体重・一言メモを記録できる。陸斗さんは管理画面(`/admin/meals`)から全員の記録を名前ごとに閲覧し、体重の推移をグラフで確認できる
+- フェーズ⑨「食事記録の集計(Googleスプレッドシート)」: Googleスプレッドシートに紐づくApps Scriptが毎日(または手動で)Supabaseの集計関数を呼び出し、全員分の「記録状況(継続率)」「体重推移」「カロリー・PFC平均」をシートに書き込む。陸斗さんは管理画面を開かなくても、スプレッドシートだけで全体の状況を確認できる
 
 いずれも実装済み。スマホ表示前提のレスポンシブUI。
 
@@ -58,6 +59,7 @@ npm run dev
 | `0011_meal_photos_per_meal.sql` | 写真を「1日1枚」から「食事ごとに1枚」に変更。`photo_url`を`breakfast_photo_url`/`lunch_photo_url`/`dinner_photo_url`/`snack_photo_url`の4列に置き換え、`upsert_meal_log`も4枚のURLを受け取れるよう更新 |
 | `0012_meal_log_coach_comments.sql` | `meal_logs`に`coach_comment`(陸斗さんのコメント)・`client_reply`(本人の返信)を追加。authenticatedにUPDATE権限を付与し、本人が自分の全記録を取得する`get_my_meal_logs`・返信を保存する`set_client_reply`関数を追加 |
 | `0013_meal_nutrition_estimate.sql` | `meal_logs`に`estimated_calories`/`estimated_protein`/`estimated_fat`/`estimated_carbs`(AI推定のカロリー・PFC)を追加。`upsert_meal_log`・`get_my_meal_logs`を推定値の保存・取得に対応させる |
+| `0014_meal_stats_for_sheets_sync.sql` | Googleスプレッドシート同期用に、全員分を横断集計する`get_meal_log_continuity_stats`(記録状況・継続率)・`get_weight_history_all`(体重推移)・`get_nutrition_averages`(カロリー・PFC平均)を追加。全員分のデータを返すため、他の関数と異なり**あえて`anon`/`authenticated`にはgrantしない**(service_roleキーでのみ呼び出し可能) |
 
 ### 管理画面ユーザーの作成
 
@@ -76,6 +78,8 @@ src/
 supabase/
   migrations/   Supabaseのテーブル定義
   functions/    Edge Function(Instagram Graph API同期、X自動投稿、食事内容からのカロリー・PFC推定)
+apps-script/
+  meal-stats-sync/  Googleスプレッドシート同期用Apps Scriptのソース(手動でエディタに貼り付けて使う。ビルド対象外)
 ```
 
 ## 食事管理記録について
@@ -137,6 +141,46 @@ Storageバケット`meal-photos`にアップロードする。バケットは公
 
 Gemini APIは無料枠内で利用できる（1分あたり・1日あたりのリクエスト数に上限はあるが、
 この用途の利用規模では十分に収まる）。
+
+## 食事管理データの集計表(Googleスプレッドシート)について
+
+Googleスプレッドシートに紐づくApps Script(`apps-script/meal-stats-sync/Code.gs`)が、毎日の
+時間主導型トリガー、またはシートのメニュー「イクマ集計」→「今すぐ更新」から、Supabaseの
+集計関数を3つ呼び出し、結果をシート上の4つのタブに書き込む。
+
+- `記録状況`: 名前ごとの総記録日数・最終記録日・直近7日/30日の記録日数と継続率
+- `体重推移`: 名前・日付・体重の一覧(全員分。シート側でフィルタやピボットテーブルを使って人ごとに見る想定)
+- `カロリーPFC平均`: 名前ごとのAI推定カロリー・タンパク質・脂質・炭水化物の平均値
+- `同期ログ`: 実行日時・成功/エラー・詳細(トリガー実行分も含め毎回記録されるので、Apps Scriptの
+  実行ログ画面を見なくてもシート上で同期状況が分かる)
+
+Edge Functionを使わない構成のため、他の連携機能にある「`supabase secrets set`」のステップは無い。
+代わりに、認証情報(Supabaseのservice_roleキー)はApps Scriptのメニューから設定する。
+
+**セキュリティ上の注意**: service_roleキーはRLS(Row Level Security)を完全にバイパスする強い権限
+を持つため、Apps Scriptの「プロパティ サービス」(`PropertiesService`、非公開のキー保管領域)にのみ
+保持すること。シートのセルに書いたり、シートを複製・共有した先にコピーしたりしないこと。また、
+このために追加した3つのSupabase関数(`get_meal_log_continuity_stats` / `get_weight_history_all` /
+`get_nutrition_averages`)は、本アプリの他のSECURITY DEFINER関数と異なり**あえて`anon`/`authenticated`
+にgrantしていない**(全員分のデータを返すため、公開されているanonキーだけで読めてしまうと困る)。
+Postgresは新規関数の実行権限をデフォルトで`PUBLIC`(≒全ロール)に自動付与するため、migration内で
+明示的に`revoke execute ... from public`している。service_roleキーでのみ呼び出せる。
+
+利用にはリポジトリの外で以下の準備が必要（service_roleキーは本リポジトリにはコミットしない）。
+
+1. Supabaseの SQL Editor で `supabase/migrations/0014_meal_stats_for_sheets_sync.sql` を実行する
+2. 集計結果を表示したいGoogleスプレッドシートを開き(無ければ新規作成)、「拡張機能 > Apps Script」を開く
+3. `apps-script/meal-stats-sync/Code.gs` の内容をまるごと貼り付け、先頭の `SUPABASE_PROJECT_URL` を
+   自分のSupabaseプロジェクトURLに書き換えて保存する
+4. スプレッドシートを開き直し、Googleの権限承認ダイアログが出たら許可する
+5. メニュー「イクマ集計」→「APIキーを設定」で、Supabaseダッシュボードの
+   Project Settings > API > `service_role` キーを貼り付ける
+6. メニュー「イクマ集計」→「今すぐ更新」を実行し、4つのタブに実データが入ることを確認する
+7. メニュー「イクマ集計」→「毎日自動更新を設定」を実行し、日次の自動更新を有効にする
+   （Apps ScriptのTriggers画面から手動で時間主導型トリガーを設定・変更することも可能）
+
+データはシートを更新した時点のスナップショットであり、常にリアルタイムで反映されるわけではない。
+Apps Scriptの無料枠(1日あたりの実行時間・呼び出し回数の上限)は、この規模の利用では十分に収まる。
 
 ## 今日のLINE配信リストについて
 
