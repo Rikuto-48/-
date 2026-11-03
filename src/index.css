@@ -956,6 +956,36 @@ p {
   border-bottom: 1px solid var(--lp-border);
 }
 
+.meal-section-toggle-wrap {
+  margin: 4px 0 2px;
+}
+
+.meal-section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--lp-card);
+  border: 1px solid var(--lp-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--lp-text-h);
+  cursor: pointer;
+}
+
+.meal-section-toggle-icon {
+  color: var(--lp-gold);
+  font-size: 12px;
+}
+
+.meal-section-toggle-hint {
+  font-size: 12px;
+  color: var(--lp-gold-dark);
+  margin: 6px 2px 0;
+}
+
 .meal-photo-field {
   font-size: 12px;
   color: var(--lp-text-muted);
@@ -1043,6 +1073,24 @@ p {
   font-size: 14px;
   color: var(--lp-text-muted);
   margin-bottom: 28px;
+}
+
+.meal-streak-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--lp-gold-dark);
+  background: #fbf2d8;
+  border: 1px solid var(--lp-gold-dark);
+  border-radius: 999px;
+  padding: 6px 16px;
+  margin: -12px auto 28px;
+}
+
+.meal-streak-count {
+  font-size: 20px;
 }
 
 .meal-done-summary {

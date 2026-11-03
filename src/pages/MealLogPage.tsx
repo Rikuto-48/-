@@ -189,6 +189,26 @@ function todayLocalDate(): string {
   return new Date(now.getTime() - offsetMs).toISOString().slice(0, 10)
 }
 
+function addDays(dateKey: string, delta: number): string {
+  const [year, month, day] = dateKey.split('-').map(Number)
+  const d = new Date(year, month - 1, day + delta)
+  return toDateKey(d.getFullYear(), d.getMonth(), d.getDate())
+}
+
+// fromDate を含め、記録のある日が連続している日数を数える(例: 今日・昨日・一昨日に記録があれば3)
+function calculateStreak(logDates: string[], fromDate: string): number {
+  const dateSet = new Set(logDates)
+  if (!dateSet.has(fromDate)) return 0
+
+  let streak = 0
+  let cursor = fromDate
+  while (dateSet.has(cursor)) {
+    streak += 1
+    cursor = addDays(cursor, -1)
+  }
+  return streak
+}
+
 function MealLogPage() {
   const [name, setName] = useState(getSavedMealLogName())
   const [logDate, setLogDate] = useState(todayLocalDate())
@@ -203,6 +223,8 @@ function MealLogPage() {
   const [done, setDone] = useState(false)
   const [weightHistory, setWeightHistory] = useState<{ date: string; weight: number }[]>([])
   const [estimatedNutrition, setEstimatedNutrition] = useState<NutritionEstimate | null>(null)
+  const [streakDays, setStreakDays] = useState(0)
+  const [mealSectionExpanded, setMealSectionExpanded] = useState(false)
 
   const [viewMode, setViewMode] = useState<'form' | 'history'>('form')
   const [historyLogs, setHistoryLogs] = useState<MealHistoryLog[]>([])
@@ -276,6 +298,15 @@ function MealLogPage() {
     }
   }
 
+  async function fetchStreak(forName: string, upToDate: string) {
+    if (!supabase) return
+    const { data } = await supabase.rpc('get_my_meal_logs', { p_name: forName })
+    if (data) {
+      const logDates = (data as { log_date: string }[]).map((row) => row.log_date)
+      setStreakDays(calculateStreak(logDates, upToDate))
+    }
+  }
+
   async function fetchWeightHistory(forName: string) {
     if (!supabase) return
     const { data } = await supabase.rpc('get_weight_history', { p_name: forName })
@@ -342,7 +373,7 @@ function MealLogPage() {
 
     saveMealLogName(name)
     setEstimatedNutrition(nutrition)
-    await fetchWeightHistory(name)
+    await Promise.all([fetchWeightHistory(name), fetchStreak(name, logDate)])
     setDone(true)
   }
 
@@ -355,6 +386,8 @@ function MealLogPage() {
     setWeight('')
     setMemo('')
     setEstimatedNutrition(null)
+    setStreakDays(0)
+    setMealSectionExpanded(false)
   }
 
   async function openHistory() {
@@ -528,7 +561,17 @@ function MealLogPage() {
         <div className="meal-container meal-done">
           <p className="meal-done-badge">✓</p>
           <p className="meal-done-title">記録完了！お疲れ様でした</p>
-          <p className="meal-done-lead">今日も記録できました。次回も気軽につけてくださいね。</p>
+          <p className="meal-done-lead">
+            {streakDays >= 2
+              ? '今日も記録できました。この調子で続けていきましょう!'
+              : '今日も記録できました。次回も気軽につけてくださいね。'}
+          </p>
+
+          {streakDays >= 2 && (
+            <p className="meal-streak-badge">
+              🔥 <span className="meal-streak-count">{streakDays}</span>日連続記録中
+            </p>
+          )}
 
           {hasAnyContent && (
             <div className="meal-done-summary">
@@ -579,15 +622,19 @@ function MealLogPage() {
     )
   }
 
+  const filledMealCount = MEAL_TYPES.filter(
+    ({ key }) => mealTexts[key] || mealPhotoPreviews[key],
+  ).length
+
   return (
     <main className="lp meal-page">
       <div className="meal-container">
         <p className="lp-hero-eyebrow">食事管理記録</p>
         <h1 className="meal-title">今日の記録をつけよう</h1>
         <p className="meal-lead">
-          食事の内容・体重・気になったことを、
+          体重だけ、食事だけ、どちらかだけでも大丈夫です。
           <br />
-          思い出せる範囲で大丈夫です。
+          思い出せる範囲で気軽につけてください。
           <br />
           同じ日にもう一度送ると、内容が上書きされます。
         </p>
@@ -612,30 +659,6 @@ function MealLogPage() {
             />
           </label>
 
-          {MEAL_TYPES.map(({ key, label }) => (
-            <div key={key} className="meal-field-group">
-              <label className="meal-field">
-                {label}
-                <textarea
-                  value={mealTexts[key]}
-                  onChange={(e) => updateMealText(key, e.target.value)}
-                  rows={2}
-                />
-              </label>
-              <label className="meal-field meal-photo-field">
-                {label}の写真・任意
-                <input type="file" accept="image/*" onChange={(e) => handleMealPhotoChange(key, e)} />
-              </label>
-              {mealPhotoPreviews[key] && (
-                <img
-                  src={mealPhotoPreviews[key] ?? undefined}
-                  alt={`${label}の写真プレビュー`}
-                  className="meal-photo-preview"
-                />
-              )}
-            </div>
-          ))}
-
           <label className="meal-field">
             体重(kg)・任意
             <input
@@ -646,6 +669,46 @@ function MealLogPage() {
               onChange={(e) => setWeight(e.target.value)}
             />
           </label>
+
+          <div className="meal-section-toggle-wrap">
+            <button
+              type="button"
+              className="meal-section-toggle"
+              onClick={() => setMealSectionExpanded((prev) => !prev)}
+              aria-expanded={mealSectionExpanded}
+            >
+              {mealSectionExpanded ? '食事の内容を閉じる' : '食事の内容を記録する・任意'}
+              <span className="meal-section-toggle-icon">{mealSectionExpanded ? '▴' : '▾'}</span>
+            </button>
+            {!mealSectionExpanded && filledMealCount > 0 && (
+              <p className="meal-section-toggle-hint">{filledMealCount}件、入力済みです</p>
+            )}
+          </div>
+
+          {mealSectionExpanded &&
+            MEAL_TYPES.map(({ key, label }) => (
+              <div key={key} className="meal-field-group">
+                <label className="meal-field">
+                  {label}
+                  <textarea
+                    value={mealTexts[key]}
+                    onChange={(e) => updateMealText(key, e.target.value)}
+                    rows={2}
+                  />
+                </label>
+                <label className="meal-field meal-photo-field">
+                  {label}の写真・任意
+                  <input type="file" accept="image/*" onChange={(e) => handleMealPhotoChange(key, e)} />
+                </label>
+                {mealPhotoPreviews[key] && (
+                  <img
+                    src={mealPhotoPreviews[key] ?? undefined}
+                    alt={`${label}の写真プレビュー`}
+                    className="meal-photo-preview"
+                  />
+                )}
+              </div>
+            ))}
 
           <label className="meal-field">
             一言メモ・任意
